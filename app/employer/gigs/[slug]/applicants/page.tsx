@@ -21,15 +21,16 @@ import { AppShell } from "../../../../components/app-shell";
 import { EmptyState } from "../../../../components/empty-state";
 import { StatusPill } from "../../../../components/status-pill";
 import { useDemoStore } from "../../../../lib/demo-store";
+import { findGigByRouteKey } from "../../../../lib/gig-routing";
 
 export default function ApplicantsPage() {
-  const params = useParams<{ id: string }>();
+  const params = useParams<{ slug: string }>();
   const { gigs, applications, reviews, shortlistApplication, saveReview } = useDemoStore();
   const [openApplication, setOpenApplication] = useState<string | null>(null);
   const [reviewDrafts, setReviewDrafts] = useState<Record<string, { decision: "strong_yes" | "follow_up" | "pass"; note: string }>>({});
   const [savedReview, setSavedReview] = useState<string | null>(null);
-  const gig = gigs.find((item) => item.id === params.id);
-  const gigApplications = applications.filter((item) => item.gigId === params.id);
+  const gig = findGigByRouteKey(gigs, params.slug);
+  const gigApplications = applications.filter((item) => item.gigId === gig?.id);
 
   if (!gig) {
     return (

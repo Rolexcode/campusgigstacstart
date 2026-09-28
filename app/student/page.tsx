@@ -16,6 +16,7 @@ import { AppShell } from "../components/app-shell";
 import { EmptyState } from "../components/empty-state";
 import { StatusPill } from "../components/status-pill";
 import { useDemoStore } from "../lib/demo-store";
+import { gigRouteKey } from "../lib/gig-routing";
 
 export default function StudentDashboardPage() {
   const { currentUser, gigs, applications, hydrated } = useDemoStore();
@@ -139,7 +140,7 @@ export default function StudentDashboardPage() {
                             <p className="font-mono text-sm font-bold">{gig.budget}</p>
                             <p className="mt-1 text-xs text-muted">{gig.category}</p>
                           </div>
-                          <Link href={`/student/gigs/${gig.id}`} className="btn btn-secondary">
+                          <Link href={`/student/gigs/${gigRouteKey(gig)}`} className="btn btn-secondary">
                             {application ? "View submission" : "View Proof Task"} <ArrowRight size={16} aria-hidden="true" />
                           </Link>
                         </div>

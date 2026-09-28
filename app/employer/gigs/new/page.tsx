@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import { AppShell } from "../../../components/app-shell";
 import { useDemoStore } from "../../../lib/demo-store";
+import { slugifyGigTitle } from "../../../lib/gig-routing";
 
 type Errors = Partial<Record<"title" | "description" | "budget" | "taskTitle" | "instructions" | "deliverable", string>>;
 
@@ -47,7 +48,7 @@ export default function NewGigPage() {
     setSubmitting(true);
     window.setTimeout(() => {
       const id = createGig(values);
-      router.push(`/employer/gigs/${id}/applicants?created=1`);
+      router.push(`/employer/gigs/${slugifyGigTitle(values.title) || id}/applicants?created=1`);
     }, 500);
   };
 

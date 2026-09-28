@@ -19,17 +19,18 @@ import { useState, type FormEvent } from "react";
 import { AppShell } from "../../../components/app-shell";
 import { StatusPill } from "../../../components/status-pill";
 import { useDemoStore } from "../../../lib/demo-store";
+import { findGigByRouteKey } from "../../../lib/gig-routing";
 
 type Errors = Partial<Record<"introduction" | "proofResponse" | "links", string>>;
 
 export default function StudentGigDetailPage() {
-  const params = useParams<{ id: string }>();
+  const params = useParams<{ slug: string }>();
   const { gigs, applications, currentUser, submitApplication } = useDemoStore();
   const [errors, setErrors] = useState<Errors>({});
   const [submitting, setSubmitting] = useState(false);
-  const gig = gigs.find((item) => item.id === params.id);
+  const gig = findGigByRouteKey(gigs, params.slug);
   const application = applications.find(
-    (item) => item.gigId === params.id && item.studentId === currentUser?.id,
+    (item) => item.gigId === gig?.id && item.studentId === currentUser?.id,
   );
 
   if (!gig) {

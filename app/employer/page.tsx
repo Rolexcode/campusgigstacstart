@@ -13,6 +13,7 @@ import { AppShell } from "../components/app-shell";
 import { EmptyState } from "../components/empty-state";
 import { StatusPill } from "../components/status-pill";
 import { useDemoStore } from "../lib/demo-store";
+import { gigRouteKey } from "../lib/gig-routing";
 
 export default function EmployerDashboardPage() {
   const { currentUser, gigs, applications, hydrated } = useDemoStore();
@@ -87,7 +88,7 @@ export default function EmployerDashboardPage() {
                           <div className="flex shrink-0 items-center justify-between gap-5 border-t border-border pt-4 lg:block lg:border-t-0 lg:pt-0 lg:text-right">
                             <div className="flex items-center gap-2 text-sm font-semibold text-secondary lg:justify-end"><Users size={16} aria-hidden="true" />{gigApplications.length} applicant{gigApplications.length === 1 ? "" : "s"}</div>
                             <p className="mt-1 text-xs text-muted">{completed} with proof submitted</p>
-                            <Link href={`/employer/gigs/${gig.id}/applicants`} className="btn btn-secondary mt-3">Review applicants <ArrowRight size={15} aria-hidden="true" /></Link>
+                            <Link href={`/employer/gigs/${gigRouteKey(gig)}/applicants`} className="btn btn-secondary mt-3">Review applicants <ArrowRight size={15} aria-hidden="true" /></Link>
                           </div>
                         </div>
                       </article>
