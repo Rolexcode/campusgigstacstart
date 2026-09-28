@@ -31,6 +31,10 @@ npm run dev
 
 Open `http://localhost:3000`.
 
+## Firebase
+
+The app is linked to the Firebase project `campusgig-stacstart` through `.firebaserc`. Copy `.env.example` to `.env.local` for the web SDK configuration. Email/Password Auth and Firestore are enabled; Firestore rules live in `firestore.rules`.
+
 ## Production check
 
 ```bash
