@@ -8,7 +8,14 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { persistFirestoreRecord, registerFirebaseAccount } from "./firebase-actions";
+import {
+  loadFirebaseCollection,
+  loginFirebaseAccount,
+  logoutFirebaseAccount,
+  persistFirestoreRecord,
+  registerFirebaseAccount,
+  subscribeToFirebaseAuth,
+} from "./firebase-actions";
 
 export type Persona = "student" | "employer" | "admin";
 export type VerificationStatus = "not_submitted" | "pending" | "verified" | "rejected";
@@ -122,13 +129,16 @@ type DemoStore = DemoState & {
   currentUser?: User;
   setPersona: (persona: Persona) => void;
   signup: (input: SignupInput) => Promise<string>;
-  submitVerification: (input: VerificationInput) => void;
-  reviewVerification: (requestId: string, decision: "approved" | "rejected") => void;
-  createGig: (input: GigInput) => string;
-  submitApplication: (gigId: string, input: ApplicationInput) => void;
-  shortlistApplication: (applicationId: string) => void;
-  saveReview: (applicationId: string, decision: Review["decision"], note: string) => void;
+  submitVerification: (input: VerificationInput) => Promise<void>;
+  reviewVerification: (requestId: string, decision: "approved" | "rejected") => Promise<void>;
+  createGig: (input: GigInput) => Promise<string>;
+  submitApplication: (gigId: string, input: ApplicationInput) => Promise<void>;
+  shortlistApplication: (applicationId: string) => Promise<void>;
+  saveReview: (applicationId: string, decision: Review["decision"], note: string) => Promise<void>;
   resetDemo: () => void;
+  login: (email: string, password: string) => Promise<"student" | "employer" | null>;
+  logout: () => Promise<void>;
+  backendConnected: boolean;
 };
 
 const STORAGE_KEY = "campusgig-stacstart:v1";
@@ -302,6 +312,7 @@ function makeId(prefix: string) {
 export function DemoStoreProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<DemoState>(initialState);
   const [hydrated, setHydrated] = useState(false);
+  const [firebaseUserId, setFirebaseUserId] = useState<string | null>(null);
 
   useEffect(() => {
     try {
@@ -315,13 +326,51 @@ export function DemoStoreProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    if (hydrated) window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-  }, [hydrated, state]);
+    let cancelled = false;
+    const unsubscribe = subscribeToFirebaseAuth(async (authUser) => {
+      if (!authUser || cancelled) {
+        setFirebaseUserId(null);
+        return;
+      }
+      setFirebaseUserId(authUser.uid);
+      try {
+        const [users, gigs, applications, verifications, reviews] = await Promise.all([
+          loadFirebaseCollection<User>("users"),
+          loadFirebaseCollection<Gig>("gigs"),
+          loadFirebaseCollection<Application>("applications"),
+          loadFirebaseCollection<VerificationRequest>("verifications"),
+          loadFirebaseCollection<Review>("reviews"),
+        ]);
+        if (cancelled) return;
+        setState((current) => ({
+          ...current,
+          users,
+          gigs,
+          applications,
+          verifications,
+          reviews,
+          activeUserId: authUser.uid,
+          activePersona: users.find((user) => user.id === authUser.uid)?.role ?? current.activePersona,
+        }));
+      } catch {
+        // Keep the seeded experience available if a backend read is temporarily unavailable.
+      }
+    });
+    return () => {
+      cancelled = true;
+      unsubscribe();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (hydrated && !firebaseUserId) window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  }, [firebaseUserId, hydrated, state]);
 
   const currentUser = state.users.find((user) => user.id === state.activeUserId);
 
   const value = useMemo<DemoStore>(() => {
     const setPersona = (persona: Persona) => {
+      if (firebaseUserId && persona !== currentUser?.role) return;
       const personaId =
         persona === "student"
           ? "student-amina"
@@ -358,7 +407,32 @@ export function DemoStoreProvider({ children }: { children: ReactNode }) {
       return id;
     };
 
-    const submitVerification = (input: VerificationInput) => {
+    const login = async (email: string, password: string) => {
+      const credential = await loginFirebaseAccount(email.trim(), password);
+      if (!credential) return null;
+      const profiles = await loadFirebaseCollection<User>("users");
+      const profile = profiles.find((user) => user.id === credential.user.uid);
+      if (profile) {
+        setState((current) => ({
+          ...current,
+          users: profiles,
+          activeUserId: profile.id,
+          activePersona: profile.role,
+        }));
+      }
+      return profile?.role ?? "student";
+    };
+
+    const logout = async () => {
+      await logoutFirebaseAccount();
+      setState((current) => ({
+        ...current,
+        activePersona: "student",
+        activeUserId: "student-amina",
+      }));
+    };
+
+    const submitVerification = async (input: VerificationInput) => {
       const user = state.users.find((item) => item.id === state.activeUserId);
       if (!user) return;
       const request: VerificationRequest = {
@@ -372,7 +446,7 @@ export function DemoStoreProvider({ children }: { children: ReactNode }) {
         status: "pending",
         submittedAt: new Date().toISOString(),
       };
-      void persistFirestoreRecord("verifications", request.id, request);
+      await persistFirestoreRecord("verifications", request.id, request);
       setState((current) => ({
         ...current,
         users: current.users.map((item) =>
@@ -387,13 +461,22 @@ export function DemoStoreProvider({ children }: { children: ReactNode }) {
       }));
     };
 
-    const reviewVerification = (
+    const reviewVerification = async (
       requestId: string,
       decision: "approved" | "rejected",
     ) => {
+      const request = state.verifications.find((item) => item.id === requestId);
+      if (!request) return;
+      const updatedRequest = { ...request, status: decision };
+      const updatedUser = state.users.find((item) => item.id === request.userId);
+      await persistFirestoreRecord("verifications", requestId, updatedRequest);
+      if (updatedUser) {
+        await persistFirestoreRecord("users", updatedUser.id, {
+          ...updatedUser,
+          verificationStatus: decision === "approved" ? "verified" : "rejected",
+        });
+      }
       setState((current) => {
-        const request = current.verifications.find((item) => item.id === requestId);
-        if (!request) return current;
         return {
           ...current,
           verifications: current.verifications.map((item) =>
@@ -411,7 +494,7 @@ export function DemoStoreProvider({ children }: { children: ReactNode }) {
       });
     };
 
-    const createGig = (input: GigInput) => {
+    const createGig = async (input: GigInput) => {
       const id = makeId("gig");
       const employer = state.users.find((user) => user.id === state.activeUserId);
       const gig: Gig = {
@@ -422,12 +505,12 @@ export function DemoStoreProvider({ children }: { children: ReactNode }) {
         createdAt: new Date().toISOString(),
         status: "open",
       };
-      void persistFirestoreRecord("gigs", gig.id, gig);
+      await persistFirestoreRecord("gigs", gig.id, gig);
       setState((current) => ({ ...current, gigs: [gig, ...current.gigs] }));
       return id;
     };
 
-    const submitApplication = (gigId: string, input: ApplicationInput) => {
+    const submitApplication = async (gigId: string, input: ApplicationInput) => {
       const student = state.users.find((user) => user.id === state.activeUserId);
       if (!student) return;
       const application: Application = {
@@ -445,7 +528,7 @@ export function DemoStoreProvider({ children }: { children: ReactNode }) {
         status: "submitted",
         createdAt: new Date().toISOString(),
       };
-      void persistFirestoreRecord("applications", application.id, application);
+      await persistFirestoreRecord("applications", application.id, application);
       setState((current) => ({
         ...current,
         applications: [
@@ -457,16 +540,20 @@ export function DemoStoreProvider({ children }: { children: ReactNode }) {
       }));
     };
 
-    const shortlistApplication = (applicationId: string) => {
+    const shortlistApplication = async (applicationId: string) => {
+      const application = state.applications.find((item) => item.id === applicationId);
+      if (!application) return;
+      const updatedApplication = { ...application, status: "shortlisted" as const };
+      await persistFirestoreRecord("applications", applicationId, updatedApplication);
       setState((current) => ({
         ...current,
         applications: current.applications.map((item) =>
-          item.id === applicationId ? { ...item, status: "shortlisted" } : item,
+          item.id === applicationId ? updatedApplication : item,
         ),
       }));
     };
 
-    const saveReview = (
+    const saveReview = async (
       applicationId: string,
       decision: Review["decision"],
       note: string,
@@ -482,7 +569,7 @@ export function DemoStoreProvider({ children }: { children: ReactNode }) {
         note: note.trim(),
         updatedAt: new Date().toISOString(),
       };
-      void persistFirestoreRecord("reviews", `${applicationId}-${reviewer.id}`, review);
+      await persistFirestoreRecord("reviews", `${applicationId}-${reviewer.id}`, review);
       setState((current) => ({
         ...current,
         reviews: [
@@ -512,8 +599,11 @@ export function DemoStoreProvider({ children }: { children: ReactNode }) {
       shortlistApplication,
       saveReview,
       resetDemo,
+      login,
+      logout,
+      backendConnected: Boolean(firebaseUserId),
     };
-  }, [currentUser, hydrated, state]);
+  }, [currentUser, firebaseUserId, hydrated, state]);
 
   return <DemoStoreContext.Provider value={value}>{children}</DemoStoreContext.Provider>;
 }

@@ -8,7 +8,7 @@ import { AppShell } from "../../../components/app-shell";
 import { useDemoStore } from "../../../lib/demo-store";
 import { slugifyGigTitle } from "../../../lib/gig-routing";
 
-type Errors = Partial<Record<"title" | "description" | "budget" | "taskTitle" | "instructions" | "deliverable", string>>;
+type Errors = Partial<Record<"title" | "description" | "budget" | "taskTitle" | "instructions" | "deliverable" | "form", string>>;
 
 export default function NewGigPage() {
   const router = useRouter();
@@ -16,7 +16,7 @@ export default function NewGigPage() {
   const [errors, setErrors] = useState<Errors>({});
   const [submitting, setSubmitting] = useState(false);
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const data = new FormData(event.currentTarget);
     const values = {
@@ -46,10 +46,13 @@ export default function NewGigPage() {
       return;
     }
     setSubmitting(true);
-    window.setTimeout(() => {
-      const id = createGig(values);
+    try {
+      const id = await createGig(values);
       router.push(`/employer/gigs/${slugifyGigTitle(values.title) || id}/applicants?created=1`);
-    }, 500);
+    } catch {
+      setErrors({ form: "We could not publish this gig. Check your connection and try again." });
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -146,6 +149,7 @@ export default function NewGigPage() {
                   {submitting ? <LoaderCircle className="animate-spin" size={17} aria-hidden="true" /> : null}
                   {submitting ? "Publishing gig…" : `Publish for ${currentUser?.company || "Nuru Labs"}`}
                 </button>
+                {errors.form ? <p role="alert" className="field-error mt-3 text-right">{errors.form}</p> : null}
               </div>
             </form>
           </section>

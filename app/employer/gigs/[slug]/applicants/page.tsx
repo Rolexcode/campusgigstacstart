@@ -29,6 +29,16 @@ export default function ApplicantsPage() {
   const [openApplication, setOpenApplication] = useState<string | null>(null);
   const [reviewDrafts, setReviewDrafts] = useState<Record<string, { decision: "strong_yes" | "follow_up" | "pass"; note: string }>>({});
   const [savedReview, setSavedReview] = useState<string | null>(null);
+
+  const handleSaveReview = async (applicationId: string, decision: "strong_yes" | "follow_up" | "pass", note: string) => {
+    try {
+      await saveReview(applicationId, decision, note);
+      setSavedReview(applicationId);
+      window.setTimeout(() => setSavedReview(null), 1800);
+    } catch {
+      setSavedReview(null);
+    }
+  };
   const gig = findGigByRouteKey(gigs, params.slug);
   const gigApplications = applications.filter((item) => item.gigId === gig?.id);
 
@@ -111,7 +121,7 @@ export default function ApplicantsPage() {
                         <button type="button" className="btn btn-secondary flex-1" onClick={() => setOpenApplication(proofOpen ? null : application.id)} aria-expanded={proofOpen}>
                           <ExternalLink size={16} aria-hidden="true" />{proofOpen ? "Hide submission" : "Review submission"}
                         </button>
-                        <button type="button" className={`btn flex-1 ${application.status === "shortlisted" ? "btn-quiet" : "btn-primary"}`} onClick={() => shortlistApplication(application.id)} disabled={application.status === "shortlisted"}>
+                        <button type="button" className={`btn flex-1 ${application.status === "shortlisted" ? "btn-quiet" : "btn-primary"}`} onClick={() => { void shortlistApplication(application.id); }} disabled={application.status === "shortlisted"}>
                           <ShieldCheck size={16} aria-hidden="true" />{application.status === "shortlisted" ? "Shortlisted" : "Shortlist student"}
                         </button>
                       </div>
@@ -149,7 +159,7 @@ export default function ApplicantsPage() {
                         <button
                           type="button"
                           className="btn btn-quiet mt-3 w-full justify-center sm:w-auto"
-                          onClick={() => { saveReview(application.id, reviewDraft.decision, reviewDraft.note); setSavedReview(application.id); window.setTimeout(() => setSavedReview(null), 1800); }}
+                          onClick={() => { void handleSaveReview(application.id, reviewDraft.decision, reviewDraft.note); }}
                         >
                           <Save size={15} aria-hidden="true" />{savedReview === application.id ? "Saved to team review" : "Save team note"}
                         </button>

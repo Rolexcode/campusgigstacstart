@@ -24,6 +24,7 @@ export default function HomePage() {
             <a className="nav-link" href="#for-employers">For employers</a>
           </nav>
           <div className="flex items-center gap-2">
+            <Link href="/login" className="btn btn-quiet hidden sm:inline-flex">Sign in</Link>
             <Link href="/signup" className="btn btn-secondary hidden sm:inline-flex">Create account</Link>
             <Link href="/student" className="btn btn-primary">
               Try the demo <ArrowRight size={16} aria-hidden="true" />

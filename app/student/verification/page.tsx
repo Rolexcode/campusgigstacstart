@@ -6,14 +6,14 @@ import { useState, type FormEvent } from "react";
 import { AppShell } from "../../components/app-shell";
 import { useDemoStore } from "../../lib/demo-store";
 
-type Errors = Partial<Record<"university" | "schoolEmail" | "matricNumber", string>>;
+type Errors = Partial<Record<"university" | "schoolEmail" | "matricNumber" | "form", string>>;
 
 export default function StudentVerificationPage() {
   const { currentUser, submitVerification } = useDemoStore();
   const [errors, setErrors] = useState<Errors>({});
   const [submitting, setSubmitting] = useState(false);
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const data = new FormData(event.currentTarget);
     const values = {
@@ -33,10 +33,13 @@ export default function StudentVerificationPage() {
       return;
     }
     setSubmitting(true);
-    window.setTimeout(() => {
-      submitVerification(values);
+    try {
+      await submitVerification(values);
       setSubmitting(false);
-    }, 450);
+    } catch {
+      setErrors({ form: "We could not save your verification request. Check your connection and try again." });
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -138,6 +141,7 @@ export default function StudentVerificationPage() {
                     {submitting ? <LoaderCircle className="animate-spin" size={18} aria-hidden="true" /> : <ShieldCheck size={18} aria-hidden="true" />}
                     {submitting ? "Submitting for review…" : "Submit verification"}
                   </button>
+                  {errors.form ? <p role="alert" className="field-error mt-3 text-center">{errors.form}</p> : null}
                 </form>
               )}
             </section>

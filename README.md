@@ -1,43 +1,54 @@
-# CampusGig — StacStart Edition
+# CampusGig
 
-A focused hackathon prototype showing how verified university students can earn their first opportunity through practical Proof Tasks instead of years of experience.
+### Proof-first access to the first job
 
-## StacStart track fit
+CampusGig is a skills-first hiring workflow for university students across Africa. Students do not need an existing network, years of experience, or an inflated CV to make a credible start: they verify their student status, complete a small job-relevant Proof Task, and let the work lead the conversation.
 
-**Primary:** Future of Work — a lightweight hiring workflow for remote, skills-first opportunities.
+## Why this belongs in Future of Work
 
-**Supporting story:** Access & Inclusion — verified students get a fair route into paid work through evidence, not an existing network or years of experience.
+CampusGig addresses the gap between “I can do the work” and “I have enough experience to get hired.” Employers publish remote-friendly gigs with a fair, time-boxed task; students submit the work and context; hiring teams compare evidence and leave a shared recommendation before shortlisting.
 
-The collaboration feature is a shared applicant review room: teammates can leave a recommendation and handoff note against the same Proof Task evidence.
+The primary StacStart track is **Future of Work**, with **Access & Inclusion** as the supporting impact story. See the [official track definitions](https://stacstart.com/hackathon#tracks).
 
-## Demo flow
+## Judge walkthrough
 
-1. Create a student or employer account.
-2. Submit a lightweight student verification request.
-3. Approve it from the admin demo queue using PIN `2026`.
-4. Create a gig with a Proof Task as the employer.
-5. Submit proof as the student.
-6. Compare applicants and shortlist a student as the employer.
-7. Save a team recommendation so another reviewer can pick up the decision.
+1. Open the student workspace and browse the seeded opportunity.
+2. Open the Proof Task and inspect the evidence-first application flow.
+3. Switch to the employer workspace to compare applicants side by side.
+4. Open a submission, leave a team recommendation, and shortlist the strongest proof.
+5. Open the admin queue with demo PIN `2026` to see the lightweight verification step.
+6. To test persistence, create an account, sign out, and sign back in from another browser or device. The profile and records are stored in Firebase, not only in the browser.
 
-The prototype stores demo state in the browser so the complete flow survives refreshes without requiring external infrastructure.
+## What makes the demo different
 
-## Run locally
+- **Proof Tasks:** one small, real slice of work replaces an experience wall.
+- **Verification:** a visible student-status signal separates identity trust from skill assessment.
+- **Team review:** “Strong yes”, “Follow up”, or “Pass” plus one handoff note keeps hiring decisions moving across a distributed team.
+- **African context:** remote-friendly opportunities, Nigerian naira examples, and university-first onboarding.
 
-```bash
-npm install
-npm run dev
-```
+## Backend architecture
 
-Open `http://localhost:3000`.
+- **Firebase Authentication:** email/password accounts with persistent Firebase sessions.
+- **Cloud Firestore:** profiles, gigs, applications, verification requests, and team reviews.
+- **Security rules:** authenticated reads; user-scoped profile/application creation; protected writes for review records.
+- **Frontend:** Next.js App Router, React, TypeScript, Tailwind CSS, and Lucide icons.
+- **Project:** `campusgig-stacstart` (linked in `.firebaserc`).
 
-## Firebase
+The web SDK configuration is supplied through environment variables. The local `.env.local` file is ignored by Git; `.env.example` documents the required public Firebase settings.
 
-The app is linked to the Firebase project `campusgig-stacstart` through `.firebaserc`. Copy `.env.example` to `.env.local` for the web SDK configuration. Email/Password Auth and Firestore are enabled; Firestore rules live in `firestore.rules`.
+## Submission details
 
-## Production check
+- **Primary track:** Future of Work
+- **Secondary story:** Access & Inclusion
+- **Repository:** [github.com/Rolexcode/campusgigstacstart](https://github.com/Rolexcode/campusgigstacstart)
+- **Product:** CampusGig StacStart
+- **Audience:** African university students and small teams hiring emerging talent
+
+## Engineering checks
 
 ```bash
 npm run lint
 npm run build
 ```
+
+Both checks pass on the submitted build.

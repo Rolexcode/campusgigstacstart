@@ -21,7 +21,7 @@ import { StatusPill } from "../../../components/status-pill";
 import { useDemoStore } from "../../../lib/demo-store";
 import { findGigByRouteKey } from "../../../lib/gig-routing";
 
-type Errors = Partial<Record<"introduction" | "proofResponse" | "links", string>>;
+type Errors = Partial<Record<"introduction" | "proofResponse" | "links" | "form", string>>;
 
 export default function StudentGigDetailPage() {
   const params = useParams<{ slug: string }>();
@@ -45,7 +45,7 @@ export default function StudentGigDetailPage() {
     );
   }
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const data = new FormData(event.currentTarget);
     const values = {
@@ -66,10 +66,13 @@ export default function StudentGigDetailPage() {
       return;
     }
     setSubmitting(true);
-    window.setTimeout(() => {
-      submitApplication(gig.id, values);
+    try {
+      await submitApplication(gig.id, values);
       setSubmitting(false);
-    }, 500);
+    } catch {
+      setErrors({ form: "We could not save this application. Check your connection and try again." });
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -177,6 +180,7 @@ export default function StudentGigDetailPage() {
                   {submitting ? <LoaderCircle className="animate-spin" size={18} aria-hidden="true" /> : <Send size={18} aria-hidden="true" />}
                   {submitting ? "Submitting proof…" : "Submit Proof Task"}
                 </button>
+                {errors.form ? <p role="alert" className="field-error mt-3 text-center">{errors.form}</p> : null}
               </form>
             )}
           </aside>

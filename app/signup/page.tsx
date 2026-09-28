@@ -8,7 +8,7 @@ import { BrandMark } from "../components/brand-mark";
 import { useDemoStore } from "../lib/demo-store";
 
 type Role = "student" | "employer";
-type Errors = Partial<Record<"name" | "email" | "password" | "university" | "course" | "company", string>>;
+type Errors = Partial<Record<"name" | "email" | "password" | "university" | "course" | "company" | "form", string>>;
 
 export default function SignupPage() {
   const router = useRouter();
@@ -19,7 +19,7 @@ export default function SignupPage() {
   const [errors, setErrors] = useState<Errors>({});
   const formRef = useRef<HTMLFormElement>(null);
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const data = new FormData(event.currentTarget);
     const values = {
@@ -47,8 +47,7 @@ export default function SignupPage() {
     }
 
     setSubmitting(true);
-    window.setTimeout(() => {
-      void (async () => {
+    try {
         await signup({
           name: values.name,
           email: values.email,
@@ -59,8 +58,10 @@ export default function SignupPage() {
           company: values.company,
         });
         router.push(role === "student" ? "/student?welcome=1" : "/employer?welcome=1");
-      })();
-    }, 450);
+    } catch {
+      setErrors({ form: "We could not create that Firebase account. The email may already be in use, or the connection may have failed." });
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -68,9 +69,7 @@ export default function SignupPage() {
       <header className="border-b border-border bg-surface">
         <div className="page-shell flex min-h-18 items-center justify-between">
           <BrandMark />
-          <Link href="/student" className="text-sm font-semibold text-secondary hover:text-primary focus-ring rounded-lg px-3 py-2">
-            Explore demo instead
-          </Link>
+          <div className="flex items-center gap-2"><Link href="/login" className="text-sm font-semibold text-secondary hover:text-primary focus-ring rounded-lg px-3 py-2">Sign in</Link><Link href="/student" className="text-sm font-semibold text-secondary hover:text-primary focus-ring rounded-lg px-3 py-2">Explore demo</Link></div>
         </div>
       </header>
 
@@ -85,7 +84,7 @@ export default function SignupPage() {
           <div className="mt-10 hidden border-l-2 border-primary pl-5 lg:block">
             <p className="font-bold">Hackathon demo note</p>
             <p className="mt-2 text-sm leading-6 text-muted">
-              Account details stay in this browser. No emails are sent and no payment information is required.
+              Your account is secured by Firebase Authentication. No payment information is required.
             </p>
           </div>
         </section>
@@ -235,6 +234,7 @@ export default function SignupPage() {
               {submitting ? <LoaderCircle className="animate-spin" size={18} aria-hidden="true" /> : null}
               {submitting ? "Creating account…" : `Create ${role} account`}
             </button>
+            {errors.form ? <p role="alert" className="field-error mt-3 text-center">{errors.form}</p> : null}
             <p className="mt-4 text-center text-xs leading-5 text-muted">By continuing, you agree to use this prototype with demo data only.</p>
           </form>
         </section>

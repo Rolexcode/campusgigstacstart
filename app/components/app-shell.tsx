@@ -8,6 +8,7 @@ import {
   ChevronDown,
   GraduationCap,
   LayoutDashboard,
+  LogOut,
   Plus,
   RotateCcw,
   ShieldCheck,
@@ -38,7 +39,7 @@ const personaMeta = {
 export function AppShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
-  const { activePersona, currentUser, setPersona, resetDemo } = useDemoStore();
+  const { activePersona, currentUser, setPersona, resetDemo, logout, backendConnected } = useDemoStore();
 
   const changePersona = (persona: Persona) => {
     setPersona(persona);
@@ -66,7 +67,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
           <div className="flex items-center gap-2">
             <div className="persona-switcher" aria-label="Demo persona switcher">
-              {(["student", "employer", "admin"] as Persona[]).map((persona) => {
+              {(backendConnected ? ([currentUser?.role || "student"] as Persona[]) : (["student", "employer", "admin"] as Persona[])).map((persona) => {
                 const Icon = personaMeta[persona].icon;
                 return (
                   <button
@@ -95,8 +96,9 @@ export function AppShell({ children }: { children: ReactNode }) {
                 <ChevronDown size={15} className="hidden text-muted md:block" aria-hidden="true" />
               </summary>
               <div className="profile-popover">
-                <p className="text-xs font-bold uppercase tracking-wider text-muted">Demo controls</p>
-                <button
+                <p className="text-xs font-bold uppercase tracking-wider text-muted">{backendConnected ? "Firebase account" : "Demo controls"}</p>
+                {backendConnected ? <button type="button" className="menu-action" onClick={() => { void logout(); router.push("/"); }}><LogOut size={16} aria-hidden="true" />Sign out</button> : null}
+                {!backendConnected ? <button
                   type="button"
                   className="menu-action"
                   onClick={() => {
@@ -106,7 +108,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                 >
                   <RotateCcw size={16} aria-hidden="true" />
                   Reset demo data
-                </button>
+                </button> : null}
               </div>
             </details>
           </div>
