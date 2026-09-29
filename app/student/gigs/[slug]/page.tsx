@@ -38,7 +38,7 @@ export default function StudentGigDetailPage() {
       <AppShell>
         <div className="page-shell py-16 text-center">
           <h1 className="text-3xl font-bold">Opportunity not found</h1>
-          <p className="mt-3 text-muted">This demo gig may have been reset or removed.</p>
+          <p className="mt-3 text-muted">This opportunity may have closed or been removed.</p>
           <Link href="/student" className="btn btn-primary mt-6">Back to opportunities</Link>
         </div>
       </AppShell>
@@ -135,7 +135,7 @@ export default function StudentGigDetailPage() {
                   {application.githubUrl ? <a className="flex min-h-10 items-center gap-2 font-semibold text-primary hover:underline focus-ring rounded" href={application.githubUrl} target="_blank" rel="noreferrer"><Code2 size={17} aria-hidden="true" />Open GitHub submission <ArrowUpRight size={14} aria-hidden="true" /></a> : null}
                   {application.previewUrl ? <a className="flex min-h-10 items-center gap-2 font-semibold text-primary hover:underline focus-ring rounded" href={application.previewUrl} target="_blank" rel="noreferrer"><Link2 size={17} aria-hidden="true" />Open live preview <ArrowUpRight size={14} aria-hidden="true" /></a> : null}
                 </div>
-                <p className="mt-5 text-sm leading-6 text-muted">You can reset the demo from the profile menu if you want to submit again.</p>
+                <p className="mt-5 text-sm leading-6 text-muted">Your submission is saved to your account. Contact the hiring team if you need to make a correction.</p>
               </div>
             ) : currentUser?.verificationStatus !== "verified" ? (
               <div className="card card-raised sticky top-28 p-5 sm:p-7">

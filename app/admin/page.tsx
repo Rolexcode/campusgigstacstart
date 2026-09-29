@@ -32,7 +32,7 @@ export default function AdminPage() {
         setAuthenticated(true);
         setError("");
       } else {
-        setError("That demo PIN is not correct. Try 2026.");
+        setError("That PIN is not correct. Check your admin credentials and try again.");
       }
       setChecking(false);
     }, 300);
@@ -44,19 +44,19 @@ export default function AdminPage() {
         {!authenticated ? (
           <div className="mx-auto grid max-w-3xl gap-10 lg:grid-cols-5 lg:items-center">
             <section className="lg:col-span-3">
-              <p className="section-kicker">Demo admin</p>
+              <p className="section-kicker">Admin access</p>
               <h1 className="mt-3 text-4xl font-bold tracking-tight sm:text-5xl">A small trust queue for a serious first step.</h1>
               <p className="mt-5 max-w-xl text-lg leading-8 text-muted">Approve student status requests before the verified badge appears in an employer’s applicant view.</p>
             </section>
             <section className="card card-raised p-6 sm:p-8 lg:col-span-2">
               <span className="grid size-12 place-items-center rounded-xl bg-primary-soft text-primary"><LockKeyhole size={23} aria-hidden="true" /></span>
               <h2 className="mt-5 text-xl font-bold">Enter admin PIN</h2>
-              <p className="mt-2 text-sm leading-6 text-muted">Hackathon shortcut: this PIN stands in for admin authentication.</p>
+              <p className="mt-2 text-sm leading-6 text-muted">Use the administrator PIN configured for this workspace.</p>
               <form className="mt-6" onSubmit={handleLogin}>
                 <div className="field">
-                  <label htmlFor="admin-pin">Demo PIN</label>
+                  <label htmlFor="admin-pin">Admin PIN</label>
                   <input id="admin-pin" name="pin" type="password" inputMode="numeric" autoComplete="one-time-code" className="input font-mono tracking-widest" value={pin} onChange={(event) => setPin(event.target.value)} placeholder="••••" aria-invalid={error ? "true" : undefined} aria-describedby={error ? "pin-error" : "pin-hint"} />
-                  {error ? <p id="pin-error" className="field-error flex items-center gap-1.5"><AlertCircle size={14} aria-hidden="true" />{error}</p> : <p id="pin-hint" className="field-hint">Use 2026 for this demo.</p>}
+                  {error ? <p id="pin-error" className="field-error flex items-center gap-1.5"><AlertCircle size={14} aria-hidden="true" />{error}</p> : <p id="pin-hint" className="field-hint">Enter the four-digit administrator PIN.</p>}
                 </div>
                 <button type="submit" className="btn btn-primary mt-5 w-full" disabled={checking || !pin} aria-busy={checking}>
                   {checking ? <LoaderCircle className="animate-spin" size={17} aria-hidden="true" /> : <ShieldCheck size={17} aria-hidden="true" />}
@@ -73,7 +73,7 @@ export default function AdminPage() {
                 <h1 className="mt-2 text-3xl font-bold tracking-tight sm:text-4xl">Keep verification simple and accountable.</h1>
                 <p className="mt-3 max-w-2xl text-muted">Review the details students submitted, then approve the badge that employers see beside their Proof Task.</p>
               </div>
-              <StatusPill label="Demo admin session" tone="success" />
+              <StatusPill label="Admin session" tone="success" />
             </div>
 
             <div className="mt-8 grid gap-4 sm:grid-cols-4">
@@ -89,7 +89,7 @@ export default function AdminPage() {
                   <p className="section-kicker">Student status</p>
                   <h2 id="queue-title" className="mt-2 text-2xl font-bold tracking-tight">Verification requests</h2>
                 </div>
-                <span className="hidden text-sm text-muted sm:block">{verifications.length} request{verifications.length === 1 ? "" : "s"} in this demo</span>
+                <span className="hidden text-sm text-muted sm:block">{verifications.length} request{verifications.length === 1 ? "" : "s"} in the queue</span>
               </div>
 
               {verifications.length ? (

@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { useEffect } from "react";
 import {
   BriefcaseBusiness,
   Building2,
@@ -10,13 +11,12 @@ import {
   LayoutDashboard,
   LogOut,
   Plus,
-  RotateCcw,
   ShieldCheck,
   UserRoundCheck,
 } from "lucide-react";
 import type { ReactNode } from "react";
 import { BrandMark } from "./brand-mark";
-import { useDemoStore, type Persona } from "../lib/demo-store";
+import { useDemoStore } from "../lib/demo-store";
 
 const routes = {
   student: [
@@ -39,12 +39,39 @@ const personaMeta = {
 export function AppShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
-  const { activePersona, currentUser, setPersona, resetDemo, logout, backendConnected } = useDemoStore();
+  const { activePersona, currentUser, logout, backendConnected, authReady } = useDemoStore();
+  const isWorkspaceRoute = pathname.startsWith("/student") || pathname.startsWith("/employer");
+  const routePersona = pathname.startsWith("/admin") ? "admin" : activePersona;
 
-  const changePersona = (persona: Persona) => {
-    setPersona(persona);
-    router.push(personaMeta[persona].href);
-  };
+  useEffect(() => {
+    if (isWorkspaceRoute && authReady && !backendConnected) {
+      router.replace(`/login?next=${encodeURIComponent(pathname)}`);
+    }
+  }, [authReady, backendConnected, isWorkspaceRoute, pathname, router]);
+
+  if (isWorkspaceRoute && !authReady) {
+    return (
+      <main id="main-content" className="grid min-h-screen place-items-center bg-background px-6 py-16 text-center">
+        <div>
+          <p className="section-kicker">CampusGig</p>
+          <p className="mt-3 text-muted">Loading your workspace…</p>
+        </div>
+      </main>
+    );
+  }
+
+  if (isWorkspaceRoute && authReady && !backendConnected) {
+    return (
+      <main id="main-content" className="grid min-h-screen place-items-center bg-background px-6 py-16 text-center">
+        <div className="max-w-md">
+          <p className="section-kicker">Sign in required</p>
+          <h1 className="mt-3 text-3xl font-bold tracking-tight">Your workspace is waiting.</h1>
+          <p className="mt-3 leading-7 text-muted">Sign in or create an account to access opportunities, applications, and hiring tools.</p>
+          <Link href={`/login?next=${encodeURIComponent(pathname)}`} className="btn btn-primary mt-6">Continue to sign in</Link>
+        </div>
+      </main>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -53,7 +80,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           <div className="flex min-w-0 items-center gap-6">
             <BrandMark compact />
             <nav className="hidden items-center gap-1 lg:flex" aria-label="Workspace navigation">
-              {routes[activePersona].map(({ href, label, icon: Icon }) => {
+              {routes[routePersona].map(({ href, label, icon: Icon }) => {
                 const active = pathname === href || (href !== "/student" && href !== "/employer" && pathname.startsWith(href));
                 return (
                   <Link key={href} href={href} className={`nav-link ${active ? "nav-link-active" : ""}`}>
@@ -66,55 +93,38 @@ export function AppShell({ children }: { children: ReactNode }) {
           </div>
 
           <div className="flex items-center gap-2">
-            <div className="persona-switcher" aria-label="Demo persona switcher">
-              {(backendConnected ? ([currentUser?.role || "student"] as Persona[]) : (["student", "employer", "admin"] as Persona[])).map((persona) => {
+            {backendConnected ? <div className="persona-switcher" aria-label="Current workspace">
+              {(() => {
+                const persona = currentUser?.role || "student";
                 const Icon = personaMeta[persona].icon;
                 return (
-                  <button
-                    key={persona}
-                    type="button"
-                    className={`persona-button ${activePersona === persona ? "persona-button-active" : ""}`}
-                    onClick={() => changePersona(persona)}
-                    aria-pressed={activePersona === persona}
-                    title={`View as ${personaMeta[persona].label}`}
-                  >
+                  <Link href={personaMeta[persona].href} className="persona-button persona-button-active" aria-current="page">
                     <Icon size={15} aria-hidden="true" />
                     <span className="hidden sm:inline">{personaMeta[persona].label}</span>
-                  </button>
+                  </Link>
                 );
-              })}
-            </div>
-            <details className="profile-menu">
+              })()}
+            </div> : null}
+            {backendConnected ? <details className="profile-menu">
               <summary className="profile-trigger focus-ring">
-                <span className="avatar">{activePersona === "admin" ? "AD" : initials(currentUser?.name)}</span>
+                <span className="avatar">{initials(currentUser?.name)}</span>
                 <span className="hidden max-w-36 text-left leading-tight md:block">
                   <span className="block truncate text-sm font-semibold">
-                    {activePersona === "admin" ? "Demo admin" : currentUser?.name || "Demo member"}
+                    {currentUser?.name || "CampusGig member"}
                   </span>
-                  <span className="block text-xs capitalize text-muted">{activePersona} workspace</span>
+                  <span className="block text-xs capitalize text-muted">{routePersona} workspace</span>
                 </span>
                 <ChevronDown size={15} className="hidden text-muted md:block" aria-hidden="true" />
               </summary>
               <div className="profile-popover">
-                <p className="text-xs font-bold uppercase tracking-wider text-muted">{backendConnected ? "Firebase account" : "Demo controls"}</p>
-                {backendConnected ? <button type="button" className="menu-action" onClick={() => { void logout(); router.push("/"); }}><LogOut size={16} aria-hidden="true" />Sign out</button> : null}
-                {!backendConnected ? <button
-                  type="button"
-                  className="menu-action"
-                  onClick={() => {
-                    resetDemo();
-                    router.push("/");
-                  }}
-                >
-                  <RotateCcw size={16} aria-hidden="true" />
-                  Reset demo data
-                </button> : null}
+                <p className="text-xs font-bold uppercase tracking-wider text-muted">Account</p>
+                <button type="button" className="menu-action" onClick={() => { void logout(); router.push("/"); }}><LogOut size={16} aria-hidden="true" />Sign out</button>
               </div>
-            </details>
+            </details> : null}
           </div>
         </div>
         <nav className="page-shell flex gap-1 overflow-x-auto pb-2 lg:hidden" aria-label="Mobile workspace navigation">
-          {routes[activePersona].map(({ href, label, icon: Icon }) => (
+          {routes[routePersona].map(({ href, label, icon: Icon }) => (
             <Link key={href} href={href} className={`nav-link shrink-0 ${pathname === href ? "nav-link-active" : ""}`}>
               <Icon size={16} aria-hidden="true" />
               {label}

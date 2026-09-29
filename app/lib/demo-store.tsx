@@ -16,6 +16,7 @@ import {
   registerFirebaseAccount,
   subscribeToFirebaseAuth,
 } from "./firebase-actions";
+import { firebaseEnabled } from "./firebase";
 
 export type Persona = "student" | "employer" | "admin";
 export type VerificationStatus = "not_submitted" | "pending" | "verified" | "rejected";
@@ -126,6 +127,7 @@ type VerificationInput = Pick<
 
 type DemoStore = DemoState & {
   hydrated: boolean;
+  authReady: boolean;
   currentUser?: User;
   setPersona: (persona: Persona) => void;
   signup: (input: SignupInput) => Promise<string>;
@@ -313,6 +315,7 @@ export function DemoStoreProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<DemoState>(initialState);
   const [hydrated, setHydrated] = useState(false);
   const [firebaseUserId, setFirebaseUserId] = useState<string | null>(null);
+  const [authReady, setAuthReady] = useState(!firebaseEnabled);
 
   useEffect(() => {
     try {
@@ -330,6 +333,7 @@ export function DemoStoreProvider({ children }: { children: ReactNode }) {
     const unsubscribe = subscribeToFirebaseAuth(async (authUser) => {
       if (!authUser || cancelled) {
         setFirebaseUserId(null);
+        if (!cancelled) setAuthReady(true);
         return;
       }
       setFirebaseUserId(authUser.uid);
@@ -354,6 +358,8 @@ export function DemoStoreProvider({ children }: { children: ReactNode }) {
         }));
       } catch {
         // Keep the seeded experience available if a backend read is temporarily unavailable.
+      } finally {
+        if (!cancelled) setAuthReady(true);
       }
     });
     return () => {
@@ -589,6 +595,7 @@ export function DemoStoreProvider({ children }: { children: ReactNode }) {
     return {
       ...state,
       hydrated,
+      authReady,
       currentUser,
       setPersona,
       signup,
@@ -603,7 +610,7 @@ export function DemoStoreProvider({ children }: { children: ReactNode }) {
       logout,
       backendConnected: Boolean(firebaseUserId),
     };
-  }, [currentUser, firebaseUserId, hydrated, state]);
+  }, [authReady, currentUser, firebaseUserId, hydrated, state]);
 
   return <DemoStoreContext.Provider value={value}>{children}</DemoStoreContext.Provider>;
 }

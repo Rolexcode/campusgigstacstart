@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Building2, Eye, EyeOff, GraduationCap, LoaderCircle } from "lucide-react";
 import { useRef, useState, type FormEvent } from "react";
 import { BrandMark } from "../components/brand-mark";
@@ -12,8 +12,10 @@ type Errors = Partial<Record<"name" | "email" | "password" | "university" | "cou
 
 export default function SignupPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { signup } = useDemoStore();
-  const [role, setRole] = useState<Role>("student");
+  const requestedRole = searchParams.get("role");
+  const [role, setRole] = useState<Role>(requestedRole === "employer" ? "employer" : "student");
   const [showPassword, setShowPassword] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [errors, setErrors] = useState<Errors>({});
@@ -69,7 +71,7 @@ export default function SignupPage() {
       <header className="border-b border-border bg-surface">
         <div className="page-shell flex min-h-18 items-center justify-between">
           <BrandMark />
-          <div className="flex items-center gap-2"><Link href="/login" className="text-sm font-semibold text-secondary hover:text-primary focus-ring rounded-lg px-3 py-2">Sign in</Link><Link href="/student" className="text-sm font-semibold text-secondary hover:text-primary focus-ring rounded-lg px-3 py-2">Explore demo</Link></div>
+          <div className="flex items-center gap-2"><Link href="/" className="text-sm font-semibold text-secondary hover:text-primary focus-ring rounded-lg px-3 py-2">Back to home</Link><Link href="/login" className="text-sm font-semibold text-secondary hover:text-primary focus-ring rounded-lg px-3 py-2">Sign in</Link></div>
         </div>
       </header>
 
@@ -82,9 +84,9 @@ export default function SignupPage() {
           </p>
 
           <div className="mt-10 hidden border-l-2 border-primary pl-5 lg:block">
-            <p className="font-bold">Hackathon demo note</p>
+            <p className="font-bold">Built for real work</p>
             <p className="mt-2 text-sm leading-6 text-muted">
-              Your account is secured by Firebase Authentication. No payment information is required.
+              Your account is secured by Firebase Authentication, and your profile stays available wherever you sign in.
             </p>
           </div>
         </section>
@@ -235,7 +237,7 @@ export default function SignupPage() {
               {submitting ? "Creating account…" : `Create ${role} account`}
             </button>
             {errors.form ? <p role="alert" className="field-error mt-3 text-center">{errors.form}</p> : null}
-            <p className="mt-4 text-center text-xs leading-5 text-muted">By continuing, you agree to use this prototype with demo data only.</p>
+            <p className="mt-4 text-center text-xs leading-5 text-muted">By creating an account, you agree to keep your profile and submissions accurate.</p>
           </form>
         </section>
       </main>

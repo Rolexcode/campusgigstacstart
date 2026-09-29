@@ -5,7 +5,6 @@ import {
   BriefcaseBusiness,
   Check,
   Code2,
-  ExternalLink,
   GraduationCap,
   ShieldCheck,
   Sparkles,
@@ -26,8 +25,8 @@ export default function HomePage() {
           <div className="flex items-center gap-2">
             <Link href="/login" className="btn btn-quiet hidden sm:inline-flex">Sign in</Link>
             <Link href="/signup" className="btn btn-secondary hidden sm:inline-flex">Create account</Link>
-            <Link href="/student" className="btn btn-primary">
-              Try the demo <ArrowRight size={16} aria-hidden="true" />
+            <Link href="/signup" className="btn btn-primary">
+              Get started <ArrowRight size={16} aria-hidden="true" />
             </Link>
           </div>
         </div>
@@ -48,11 +47,11 @@ export default function HomePage() {
                 CampusGig helps verified university students earn paid opportunities by showing what they can do—not how long they’ve been doing it.
               </p>
               <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-                <Link href="/student" className="btn btn-primary btn-large">
-                  Explore opportunities <ArrowRight size={17} aria-hidden="true" />
+                <Link href="/signup?role=student" className="btn btn-primary btn-large">
+                  Find your next opportunity <ArrowRight size={17} aria-hidden="true" />
                 </Link>
-                <Link href="/employer" className="btn btn-secondary btn-large">
-                  Hire student talent
+                <Link href="/signup?role=employer" className="btn btn-secondary btn-large">
+                  I’m hiring
                 </Link>
               </div>
               <div className="mt-10 grid max-w-xl grid-cols-3 gap-4 border-t border-border pt-6">
@@ -164,8 +163,8 @@ export default function HomePage() {
               <p className="mt-4 max-w-xl leading-7 text-slate-300">
                 Attach one practical task, review student submissions side by side, and give your hiring team a shared recommendation before you shortlist.
               </p>
-              <Link href="/employer" className="btn mt-8 bg-white text-ink hover:bg-slate-100">
-                Open employer demo <ExternalLink size={16} aria-hidden="true" />
+              <Link href="/signup?role=employer" className="btn mt-8 bg-white text-ink hover:bg-slate-100">
+                Build your hiring workflow <ArrowRight size={16} aria-hidden="true" />
               </Link>
             </article>
 
@@ -176,7 +175,7 @@ export default function HomePage() {
               <p className="mt-14 font-mono text-xs uppercase tracking-widest text-muted">For students</p>
               <h2 className="mt-3 text-3xl font-bold leading-tight tracking-tight">Let your work speak first.</h2>
               <p className="mt-4 leading-7 text-muted">Build a credible first track record through focused tasks that fit around university life.</p>
-              <Link href="/student" className="btn btn-secondary mt-8">Open student demo</Link>
+              <Link href="/signup?role=student" className="btn btn-secondary mt-8">Create a student account</Link>
             </article>
           </div>
         </section>

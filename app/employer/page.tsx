@@ -16,8 +16,8 @@ import { useDemoStore } from "../lib/demo-store";
 import { gigRouteKey } from "../lib/gig-routing";
 
 export default function EmployerDashboardPage() {
-  const { currentUser, gigs, applications, hydrated } = useDemoStore();
-  const employerGigs = gigs.filter((gig) => gig.employerId === currentUser?.id || gig.employerId === "employer-nuru");
+  const { currentUser, gigs, applications, hydrated, backendConnected } = useDemoStore();
+  const employerGigs = gigs.filter((gig) => gig.employerId === currentUser?.id || (!backendConnected && gig.employerId === "employer-nuru"));
   const employerApplications = applications.filter((application) => employerGigs.some((gig) => gig.id === application.gigId));
 
   return (

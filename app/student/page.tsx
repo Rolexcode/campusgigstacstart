@@ -66,7 +66,7 @@ export default function StudentDashboardPage() {
                   <div className="flex flex-1 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <div>
                       <p className="font-bold text-foreground">{currentUser?.verificationStatus === "pending" ? "Verification under review" : "Verify your student status"}</p>
-                      <p className="mt-1 leading-6">{currentUser?.verificationStatus === "pending" ? "The demo admin can approve your request from the review queue." : "Submit your school details to earn the verified-student badge."}</p>
+                      <p className="mt-1 leading-6">{currentUser?.verificationStatus === "pending" ? "Our verification team is reviewing your request." : "Submit your school details to earn the verified-student badge."}</p>
                     </div>
                     <Link href="/student/verification" className="btn btn-secondary shrink-0">Open verification</Link>
                   </div>
@@ -152,7 +152,7 @@ export default function StudentDashboardPage() {
                 <div className="mt-6">
                   <EmptyState
                     title="No matching opportunities"
-                    description="Try a broader role, company, or skill. The seeded demo opportunities are still available when you clear the search."
+                    description="Try a broader role, company, or skill, or check back soon for new opportunities."
                   />
                 </div>
               )}

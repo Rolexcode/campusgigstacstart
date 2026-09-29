@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { LoaderCircle, LockKeyhole } from "lucide-react";
 import { useState, type FormEvent } from "react";
 import { BrandMark } from "../components/brand-mark";
@@ -9,6 +9,7 @@ import { useDemoStore } from "../lib/demo-store";
 
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { login } = useDemoStore();
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -21,7 +22,9 @@ export default function LoginPage() {
     try {
       const role = await login(String(data.get("email") || ""), String(data.get("password") || ""));
       if (!role) throw new Error("Firebase is not configured for this environment.");
-      router.push(role === "employer" ? "/employer" : "/student");
+      const next = searchParams.get("next");
+      const destination = next && next.startsWith("/") && !next.startsWith("//") ? next : role === "employer" ? "/employer" : "/student";
+      router.push(destination);
     } catch {
       setError("That email and password combination could not be signed in. Check the details and try again.");
     } finally {

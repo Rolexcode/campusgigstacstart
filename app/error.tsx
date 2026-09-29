@@ -8,7 +8,7 @@ export default function ErrorPage({ reset }: { error: Error & { digest?: string 
       <div className="grid max-w-md place-items-center gap-4 text-center">
         <span className="grid size-14 place-items-center rounded-2xl bg-warning-soft text-warning"><AlertTriangle size={28} aria-hidden="true" /></span>
         <h1 className="text-2xl font-bold">This workspace needs a reset.</h1>
-        <p className="text-sm leading-6 text-muted">A temporary error interrupted the demo. Your saved browser data is still safe.</p>
+        <p className="text-sm leading-6 text-muted">A temporary error interrupted this workspace. Your saved account data is still safe.</p>
         <button type="button" className="btn btn-primary" onClick={() => reset()}><RotateCcw size={17} aria-hidden="true" />Try again</button>
       </div>
     </main>

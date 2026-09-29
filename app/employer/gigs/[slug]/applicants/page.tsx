@@ -47,7 +47,7 @@ export default function ApplicantsPage() {
       <AppShell>
         <div className="page-shell py-16 text-center">
           <h1 className="text-3xl font-bold">Gig not found</h1>
-          <p className="mt-3 text-muted">This demo gig may have been reset.</p>
+          <p className="mt-3 text-muted">This opportunity may have closed or been removed.</p>
           <Link href="/employer" className="btn btn-primary mt-6">Back to employer workspace</Link>
         </div>
       </AppShell>
@@ -189,7 +189,7 @@ export default function ApplicantsPage() {
           </>
         ) : (
           <div className="mt-8">
-            <EmptyState title="No applicants yet" description="Your gig is live, but nobody has submitted a Proof Task. Switch to the student demo to make an application, or share the opportunity when you’re ready." actionLabel="View student demo" actionHref="/student" />
+            <EmptyState title="No applicants yet" description="Your gig is live, but nobody has submitted a Proof Task. Share the opportunity with students when you’re ready." />
           </div>
         )}
 

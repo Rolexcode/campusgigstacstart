@@ -53,7 +53,7 @@ export default function StudentVerificationPage() {
               <h1 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">Build trust before the first conversation.</h1>
               <p className="mt-4 leading-7 text-muted">A verified badge confirms that the applicant is currently connected to a university. It does not score their ability—the Proof Task does that.</p>
               <div className="mt-8 border-l-2 border-primary pl-5">
-                <p className="font-bold">Demo-safe verification</p>
+                <p className="font-bold">A focused trust check</p>
                 <p className="mt-2 text-sm leading-6 text-muted">No document upload is required. The admin reviews only the school details submitted here.</p>
               </div>
             </section>
@@ -70,8 +70,7 @@ export default function StudentVerificationPage() {
                 <div className="grid place-items-center py-10 text-center">
                   <span className="grid size-16 place-items-center rounded-2xl bg-warning-soft text-warning"><Clock3 size={30} aria-hidden="true" /></span>
                   <h2 className="mt-5 text-2xl font-bold">Verification is ready for review</h2>
-                  <p className="mt-3 max-w-md leading-7 text-muted">Switch to the admin workspace and approve the request to complete the demo flow.</p>
-                  <Link href="/admin" className="btn btn-primary mt-6"><ShieldCheck size={17} aria-hidden="true" />Open admin queue</Link>
+                  <p className="mt-3 max-w-md leading-7 text-muted">Our verification team will review the details and update your badge when it is approved.</p>
                 </div>
               ) : (
                 <form onSubmit={handleSubmit} noValidate>
@@ -79,7 +78,7 @@ export default function StudentVerificationPage() {
                     <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-primary-soft text-primary"><GraduationCap size={22} aria-hidden="true" /></span>
                     <div>
                       <h2 className="text-xl font-bold">University details</h2>
-                      <p className="mt-1 text-sm leading-6 text-muted">The demo admin will compare these details and choose approve or reject.</p>
+                      <p className="mt-1 text-sm leading-6 text-muted">Our verification team uses these details to confirm your current student status.</p>
                     </div>
                   </div>
 
