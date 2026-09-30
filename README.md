@@ -1,58 +1,84 @@
 # CampusGig
 
-### Proof-first access to the first job
+**Proof-first hiring for university talent.**
 
-CampusGig is a skills-first hiring workflow for university students across Africa. Students do not need an existing network, years of experience, or an inflated CV to make a credible start: they verify their student status, complete a small job-relevant Proof Task, and let the work lead the conversation.
+CampusGig helps university students access paid opportunities by letting their work speak before their experience. Employers post remote-friendly roles with small, job-relevant Proof Tasks; verified students respond with real evidence of ability; hiring teams review the work together and shortlist candidates based on what they can do.
 
-## Why this belongs in Future of Work
+**Live product:** https://campusgigstacstart.vercel.app  
+**Demo video:** https://youtu.be/kFZN7N3U5uU  
+**Primary track:** Future of Work
 
-CampusGig addresses the gap between “I can do the work” and “I have enough experience to get hired.” Employers publish remote-friendly gigs with a fair, time-boxed task; students submit the work and context; hiring teams compare evidence and leave a shared recommendation before shortlisting.
+## The problem
 
-The primary StacStart track is **Future of Work**, with **Access & Inclusion** as the supporting impact story. See the [official track definitions](https://stacstart.com/hackathon#tracks).
+Students often face a cold-start problem: employers want experience, ratings, or an established track record, but students need a first opportunity before they can build any of those things.
 
-## Judge walkthrough
+CampusGig gives employers a better signal than an empty CV while giving students a fairer route into their first paid work.
 
-1. Create one account and open the student workspace.
-2. Update Profile with skills, a work link, university details, and an ID-card upload; confirm the inline preview. **Save profile** only updates the profile; **Request student verification** creates the admin queue request.
-3. Once verified, browse the seeded opportunity and open its Proof Task.
-4. Submit the proof, then open My gigs in the same account.
-5. Open the submission, leave a team recommendation, and shortlist the strongest proof.
-6. Open the admin queue with PIN `2026`, open a member, view the ID card in the in-app preview, then approve or reject the request. Use **Refresh queue** to pull the latest Firestore state.
-7. Open an employer's posted gig, review an applicant's Proof Task, expand **View profile**, and select the student. The gig closes and the remaining applicants are marked not selected.
-8. To test persistence, sign out and sign back in from another browser or device. The profile and records are stored in Firebase, not only in the browser.
+## How CampusGig works
 
-## What makes the demo different
+1. **Create one account** — CampusGig uses universal accounts, so users are not forced into a permanent student or employer role at signup.
+2. **Post an opportunity** — anyone hiring can create a role with clear compensation and attach a small Proof Task that reflects a real slice of the work.
+3. **Verify student status** — students add their university information and request verification before applying.
+4. **Submit proof of ability** — verified students apply with their response, approach, GitHub repository, live project, or other relevant evidence.
+5. **Review collaboratively** — hiring teams compare applicants, inspect submitted work, leave a shared recommendation, and add a handoff note.
+6. **Shortlist with evidence** — employers move candidates forward based on demonstrated ability rather than years of prior experience.
 
-- **Proof Tasks:** one small, real slice of work replaces an experience wall.
-- **Verification:** a visible student-status signal separates identity trust from skill assessment.
-- **Team review:** “Strong yes”, “Follow up”, or “Pass” plus one handoff note keeps hiring decisions moving across a distributed team.
-- **Universal accounts:** one account can post work or apply as a verified student; sign-up does not force a permanent role.
-- **African context:** remote-friendly opportunities, Nigerian naira examples, and university-first verification.
+## What makes CampusGig different
 
-## Backend architecture
+### Proof Tasks
 
-- **Firebase Authentication:** email/password accounts with persistent Firebase sessions.
-- **Cloud Firestore:** profiles, gigs, applications, verification requests, and team reviews.
-- **Firestore-backed ID evidence:** student ID images are compressed in the browser and saved with the authenticated verification request, so the demo works without a paid Storage bucket.
-- **Security rules:** authenticated reads; user-scoped profile/application creation; protected writes for review records.
-- **Frontend:** Next.js App Router, React, TypeScript, Tailwind CSS, and Lucide icons.
-- **Project:** `campusgig-stacstart` (linked in `.firebaserc`).
+Every opportunity can include a focused, time-boxed task tied to the actual role. Instead of asking emerging talent to prove years of experience they have not yet had the chance to earn, employers can evaluate a small piece of real work.
 
-The web SDK configuration is supplied through environment variables. The local `.env.local` file is ignored by Git; `.env.example` documents the required public Firebase settings.
+### Verified student identity
 
-## Submission details
+Student verification separates two questions:
 
-- **Primary track:** Future of Work
-- **Secondary story:** Access & Inclusion
-- **Repository:** [github.com/Rolexcode/campusgigstacstart](https://github.com/Rolexcode/campusgigstacstart)
-- **Product:** CampusGig StacStart
-- **Audience:** African university students and small teams hiring emerging talent
+- **Who is this person?** — verified student status provides an identity/trust signal.
+- **Can they do the work?** — the Proof Task provides the skill signal.
 
-## Engineering checks
+### Collaborative hiring
+
+Applicant review is designed for distributed teams. Reviewers can leave a recommendation — **Strong Yes**, **Follow Up**, or **Pass** — add a handoff note, inspect the submitted proof, and shortlist the candidate they want to move forward with.
+
+### Universal accounts
+
+CampusGig does not force users into separate permanent employer and student identities. The same account can post work, while verified students can also apply to opportunities.
+
+## Tech stack
+
+- **Next.js + TypeScript**
+- **Tailwind CSS**
+- **Firebase Authentication**
+- **Cloud Firestore**
+
+Firebase Authentication handles user accounts and persistent sessions, while Cloud Firestore stores profiles, opportunities, applications, verification requests, Proof Task submissions, and team reviews.
+
+## Future of Work
+
+CampusGig fits the **Future of Work** track by improving how emerging talent accesses remote work and how teams evaluate early-career candidates.
+
+The product focuses on a simple idea:
+
+> **Evidence before experience.**
+
+Instead of treating a missing track record as proof that a student cannot do the work, CampusGig gives them a structured way to show what they can do.
+
+## Run locally
+
+```bash
+npm install
+npm run dev
+```
+
+Create a `.env.local` file using the Firebase variables documented in `.env.example`.
+
+For a production check:
 
 ```bash
 npm run lint
 npm run build
 ```
 
-Both checks pass on the submitted build.
+---
+
+Built for the StacStart Hackathon.
