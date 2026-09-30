@@ -1,0 +1,13 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /student-ids/{userId}/{fileName} {
+      allow write: if request.auth != null && request.auth.uid == userId
+        && request.resource.size < 5 * 1024 * 1024
+        && request.resource.contentType.matches('image/.*|application/pdf');
+      // The admin queue uses the tokenized download URL saved with the request.
+      allow read: if request.auth != null;
+    }
+  }
+}

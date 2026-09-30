@@ -68,7 +68,7 @@ export default function StudentDashboardPage() {
                       <p className="font-bold text-foreground">{currentUser?.verificationStatus === "pending" ? "Verification under review" : "Verify your student status"}</p>
                       <p className="mt-1 leading-6">{currentUser?.verificationStatus === "pending" ? "Our verification team is reviewing your request." : "Submit your school details to earn the verified-student badge."}</p>
                     </div>
-                    <Link href="/student/verification" className="btn btn-secondary shrink-0">Open verification</Link>
+                    <Link href="/profile" className="btn btn-secondary shrink-0">Update your profile</Link>
                   </div>
                 </div>
               )}

@@ -15,6 +15,7 @@ import {
   persistFirestoreRecord,
   registerFirebaseAccount,
   subscribeToFirebaseAuth,
+  uploadStudentId,
 } from "./firebase-actions";
 import { firebaseEnabled } from "./firebase";
 
@@ -32,6 +33,10 @@ export type User = {
   course?: string;
   company?: string;
   skills: string[];
+  portfolioUrl?: string;
+  idCardUrl?: string;
+  matricNumber?: string;
+  schoolEmail?: string;
   verificationStatus?: VerificationStatus;
 };
 
@@ -89,6 +94,9 @@ export type VerificationRequest = {
   university: string;
   schoolEmail: string;
   matricNumber: string;
+  idCardUrl?: string;
+  portfolioUrl?: string;
+  skills?: string[];
   note: string;
   status: "pending" | "approved" | "rejected";
   submittedAt: string;
@@ -119,8 +127,20 @@ type ApplicationInput = Pick<
 
 type VerificationInput = Pick<
   VerificationRequest,
-  "university" | "schoolEmail" | "matricNumber" | "note"
+  "university" | "schoolEmail" | "matricNumber" | "note" | "idCardUrl" | "portfolioUrl" | "skills"
 >;
+
+type ProfileInput = {
+  university: string;
+  course: string;
+  schoolEmail: string;
+  matricNumber: string;
+  idCardUrl: string;
+  idCardFile?: File;
+  portfolioUrl: string;
+  skills: string[];
+  requestVerification?: boolean;
+};
 
 type DemoStore = DemoState & {
   hydrated: boolean;
@@ -128,6 +148,7 @@ type DemoStore = DemoState & {
   currentUser?: User;
   setPersona: (persona: Persona) => void;
   signup: (input: SignupInput) => Promise<string>;
+  updateProfile: (input: ProfileInput) => Promise<void>;
   submitVerification: (input: VerificationInput) => Promise<void>;
   reviewVerification: (requestId: string, decision: "approved" | "rejected") => Promise<void>;
   createGig: (input: GigInput) => Promise<string>;
@@ -427,6 +448,58 @@ export function DemoStoreProvider({ children }: { children: ReactNode }) {
       return profile?.role === "employer" ? "employer" : profile?.role === "student" ? "student" : "member";
     };
 
+    const updateProfile = async (input: ProfileInput) => {
+      const user = state.users.find((item) => item.id === state.activeUserId);
+      if (!user) return;
+      const skills = input.skills.map((skill) => skill.trim()).filter(Boolean).slice(0, 12);
+      let idCardUrl = user.idCardUrl || input.idCardUrl.trim();
+      if (input.idCardFile) {
+        const uploadedIdUrl = await uploadStudentId(input.idCardFile, user.id);
+        if (!uploadedIdUrl) throw new Error("Student ID upload is unavailable.");
+        idCardUrl = uploadedIdUrl;
+      }
+      const verificationStatus = input.requestVerification ? "pending" : user.verificationStatus;
+      const updatedUser: User = {
+        ...user,
+        university: input.university.trim(),
+        course: input.course.trim(),
+        schoolEmail: input.schoolEmail.trim().toLowerCase(),
+        matricNumber: input.matricNumber.trim(),
+        idCardUrl,
+        portfolioUrl: input.portfolioUrl.trim(),
+        skills,
+        verificationStatus,
+      };
+      await persistFirestoreRecord("users", updatedUser.id, updatedUser);
+
+      let verificationRequest: VerificationRequest | null = null;
+      if (input.requestVerification) {
+        verificationRequest = {
+          id: updatedUser.id,
+          userId: updatedUser.id,
+          studentName: updatedUser.name,
+          university: updatedUser.university || "",
+          schoolEmail: updatedUser.schoolEmail || "",
+          matricNumber: updatedUser.matricNumber || "",
+          idCardUrl: updatedUser.idCardUrl,
+          portfolioUrl: updatedUser.portfolioUrl,
+          skills: updatedUser.skills,
+          note: `${updatedUser.course || "Student"} profile submitted for verification.`,
+          status: "pending",
+          submittedAt: new Date().toISOString(),
+        };
+        await persistFirestoreRecord("verifications", verificationRequest.id, verificationRequest);
+      }
+
+      setState((current) => ({
+        ...current,
+        users: current.users.map((item) => item.id === updatedUser.id ? updatedUser : item),
+        verifications: verificationRequest
+          ? [verificationRequest, ...current.verifications.filter((item) => item.userId !== updatedUser.id)]
+          : current.verifications,
+      }));
+    };
+
     const logout = async () => {
       await logoutFirebaseAccount();
       setState((current) => ({
@@ -600,6 +673,7 @@ export function DemoStoreProvider({ children }: { children: ReactNode }) {
       currentUser,
       setPersona,
       signup,
+      updateProfile,
       submitVerification,
       reviewVerification,
       createGig,

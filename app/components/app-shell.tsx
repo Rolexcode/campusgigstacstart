@@ -5,9 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect } from "react";
 import {
   BriefcaseBusiness,
-  Building2,
   ChevronDown,
-  GraduationCap,
   LayoutDashboard,
   LogOut,
   Plus,
@@ -16,38 +14,22 @@ import {
 } from "lucide-react";
 import type { ReactNode } from "react";
 import { BrandMark } from "./brand-mark";
-import { useDemoStore, type Persona } from "../lib/demo-store";
+import { useDemoStore } from "../lib/demo-store";
 
-const routes = {
-  student: [
-    { href: "/student", label: "Opportunities", icon: BriefcaseBusiness },
-    { href: "/student/verification", label: "Verification", icon: UserRoundCheck },
-  ],
-  employer: [
-    { href: "/employer", label: "Overview", icon: LayoutDashboard },
-    { href: "/employer/gigs/new", label: "Post a gig", icon: Plus },
-  ],
-  admin: [{ href: "/admin", label: "Review queue", icon: ShieldCheck }],
-};
-
-const personaMeta = {
-  student: { label: "Student", icon: GraduationCap, href: "/student" },
-  employer: { label: "Employer", icon: Building2, href: "/employer" },
-  admin: { label: "Admin", icon: ShieldCheck, href: "/admin" },
-};
+const memberRoutes = [
+  { href: "/student", label: "Find opportunities", icon: BriefcaseBusiness },
+  { href: "/employer", label: "My gigs", icon: LayoutDashboard },
+  { href: "/employer/gigs/new", label: "Post a gig", icon: Plus },
+  { href: "/profile", label: "Profile", icon: UserRoundCheck },
+];
+const adminRoutes = [{ href: "/admin", label: "Review queue", icon: ShieldCheck }];
 
 export function AppShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
-  const { activePersona, currentUser, setPersona, logout, backendConnected, authReady } = useDemoStore();
-  const isWorkspaceRoute = pathname.startsWith("/student") || pathname.startsWith("/employer");
-  const routePersona = pathname.startsWith("/admin") ? "admin" : activePersona;
-
-  const changePersona = (persona: Persona) => {
-    if (persona === "admin") return;
-    setPersona(persona);
-    router.push(personaMeta[persona].href);
-  };
+  const { currentUser, logout, backendConnected, authReady } = useDemoStore();
+  const isWorkspaceRoute = pathname.startsWith("/student") || pathname.startsWith("/employer") || pathname.startsWith("/profile");
+  const routes = pathname.startsWith("/admin") ? adminRoutes : memberRoutes;
 
   useEffect(() => {
     if (isWorkspaceRoute && authReady && !backendConnected) {
@@ -86,7 +68,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           <div className="flex min-w-0 items-center gap-6">
             <BrandMark compact />
             <nav className="hidden items-center gap-1 lg:flex" aria-label="Workspace navigation">
-              {routes[routePersona].map(({ href, label, icon: Icon }) => {
+              {routes.map(({ href, label, icon: Icon }) => {
                 const active = pathname === href || (href !== "/student" && href !== "/employer" && pathname.startsWith(href));
                 return (
                   <Link key={href} href={href} className={`nav-link ${active ? "nav-link-active" : ""}`}>
@@ -99,17 +81,6 @@ export function AppShell({ children }: { children: ReactNode }) {
           </div>
 
           <div className="flex items-center gap-2">
-            {backendConnected ? <div className="persona-switcher" aria-label="Workspace switcher">
-              {(["student", "employer"] as const).map((persona) => {
-                const Icon = personaMeta[persona].icon;
-                return (
-                  <button key={persona} type="button" className={`persona-button ${activePersona === persona ? "persona-button-active" : ""}`} onClick={() => changePersona(persona)} aria-pressed={activePersona === persona}>
-                    <Icon size={15} aria-hidden="true" />
-                    <span className="hidden sm:inline">{personaMeta[persona].label}</span>
-                  </button>
-                );
-              })}
-            </div> : null}
             {backendConnected ? <details className="profile-menu">
               <summary className="profile-trigger focus-ring">
                 <span className="avatar">{initials(currentUser?.name)}</span>
@@ -117,19 +88,20 @@ export function AppShell({ children }: { children: ReactNode }) {
                   <span className="block truncate text-sm font-semibold">
                     {currentUser?.name || "CampusGig member"}
                   </span>
-                  <span className="block text-xs capitalize text-muted">{routePersona} workspace</span>
+                  <span className="block text-xs text-muted">CampusGig account</span>
                 </span>
                 <ChevronDown size={15} className="hidden text-muted md:block" aria-hidden="true" />
               </summary>
               <div className="profile-popover">
                 <p className="text-xs font-bold uppercase tracking-wider text-muted">Account</p>
+                <Link href="/profile" className="menu-action"><UserRoundCheck size={16} aria-hidden="true" />Edit profile</Link>
                 <button type="button" className="menu-action" onClick={() => { void logout(); router.push("/"); }}><LogOut size={16} aria-hidden="true" />Sign out</button>
               </div>
             </details> : null}
           </div>
         </div>
         <nav className="page-shell flex gap-1 overflow-x-auto pb-2 lg:hidden" aria-label="Mobile workspace navigation">
-          {routes[routePersona].map(({ href, label, icon: Icon }) => (
+          {routes.map(({ href, label, icon: Icon }) => (
             <Link key={href} href={href} className={`nav-link shrink-0 ${pathname === href ? "nav-link-active" : ""}`}>
               <Icon size={16} aria-hidden="true" />
               {label}

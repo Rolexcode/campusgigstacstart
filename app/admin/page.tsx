@@ -114,11 +114,16 @@ export default function AdminPage() {
                           </div>
                         ) : null}
                       </div>
-                      <dl className="mt-6 grid gap-4 border-t border-border pt-5 sm:grid-cols-3">
+                      <dl className="mt-6 grid gap-4 border-t border-border pt-5 sm:grid-cols-2 lg:grid-cols-4">
                         <div><dt className="text-xs font-bold uppercase tracking-wider text-muted">University</dt><dd className="mt-2 text-sm font-semibold">{request.university}</dd></div>
                         <div><dt className="text-xs font-bold uppercase tracking-wider text-muted">School email</dt><dd className="mt-2 break-all text-sm font-semibold">{request.schoolEmail}</dd></div>
                         <div><dt className="text-xs font-bold uppercase tracking-wider text-muted">Student number</dt><dd className="mt-2 font-mono text-sm font-semibold">{request.matricNumber}</dd></div>
+                        <div><dt className="text-xs font-bold uppercase tracking-wider text-muted">Skills</dt><dd className="mt-2 text-sm font-semibold">{request.skills?.join(", ") || "Not added"}</dd></div>
                       </dl>
+                      <div className="mt-4 flex flex-wrap gap-3">
+                        {request.idCardUrl ? <a className="btn btn-secondary" href={request.idCardUrl} target="_blank" rel="noreferrer">Open ID card</a> : null}
+                        {request.portfolioUrl ? <a className="btn btn-secondary" href={request.portfolioUrl} target="_blank" rel="noreferrer">Open work link</a> : null}
+                      </div>
                       {request.note ? <p className="mt-4 flex items-start gap-2 text-sm leading-6 text-muted"><ClipboardList size={16} className="mt-0.5 shrink-0" aria-hidden="true" />{request.note}</p> : null}
                     </article>
                   ))}

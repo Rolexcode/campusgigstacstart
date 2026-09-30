@@ -13,11 +13,12 @@ The primary StacStart track is **Future of Work**, with **Access & Inclusion** a
 ## Judge walkthrough
 
 1. Create one account and open the student workspace.
-2. Complete verification, then browse the seeded opportunity and open its Proof Task.
-3. Submit the proof, then switch to the employer workspace in the same account.
-4. Open the submission, leave a team recommendation, and shortlist the strongest proof.
-5. Open the admin queue with PIN `2026` to see the lightweight verification step.
-6. To test persistence, sign out and sign back in from another browser or device. The profile and records are stored in Firebase, not only in the browser.
+2. Update Profile with skills, a work link, university details, and an ID-card upload; submit it for verification.
+3. Once verified, browse the seeded opportunity and open its Proof Task.
+4. Submit the proof, then open My gigs in the same account.
+5. Open the submission, leave a team recommendation, and shortlist the strongest proof.
+6. Open the admin queue with PIN `2026` to review the profile and ID-card link.
+7. To test persistence, sign out and sign back in from another browser or device. The profile and records are stored in Firebase, not only in the browser.
 
 ## What makes the demo different
 

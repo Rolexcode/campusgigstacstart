@@ -9,7 +9,8 @@ import {
   type UserCredential,
 } from "firebase/auth";
 import { collection, doc, getDocs, setDoc } from "firebase/firestore";
-import { firebaseAuth, firestore, firebaseEnabled } from "./firebase";
+import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
+import { firebaseAuth, firebaseStorage, firestore, firebaseEnabled } from "./firebase";
 import type { User } from "./demo-store";
 
 export async function registerFirebaseAccount(input: {
@@ -55,4 +56,12 @@ export async function loadFirebaseCollection<T>(collectionName: string) {
 export async function persistFirestoreRecord(collectionName: string, id: string, value: unknown) {
   if (!firebaseEnabled || !firestore || !firebaseAuth?.currentUser) return;
   await setDoc(doc(firestore, collectionName, id), value);
+}
+
+export async function uploadStudentId(file: File, userId: string) {
+  if (!firebaseEnabled || !firebaseStorage || !firebaseAuth?.currentUser) return null;
+  const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "-");
+  const storageRef = ref(firebaseStorage, `student-ids/${userId}/${Date.now()}-${safeName}`);
+  const snapshot = await uploadBytes(storageRef, file, { contentType: file.type || "application/octet-stream" });
+  return getDownloadURL(snapshot.ref);
 }
