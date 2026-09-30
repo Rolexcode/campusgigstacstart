@@ -1,21 +1,22 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import {
   AlertCircle,
   BadgeCheck,
   Check,
-  ClipboardList,
+  ExternalLink,
   GraduationCap,
   LoaderCircle,
   LockKeyhole,
+  Mail,
   ShieldCheck,
   UserRound,
   X,
 } from "lucide-react";
 import { AppShell } from "../components/app-shell";
 import { StatusPill } from "../components/status-pill";
-import { useDemoStore } from "../lib/demo-store";
+import { useDemoStore, type User } from "../lib/demo-store";
 
 export default function AdminPage() {
   const { verifications, users, gigs, applications, reviewVerification } = useDemoStore();
@@ -23,6 +24,36 @@ export default function AdminPage() {
   const [pin, setPin] = useState("");
   const [error, setError] = useState("");
   const [checking, setChecking] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+
+  const selectedRequest = selectedUser
+    ? verifications.find((request) => request.userId === selectedUser.id)
+    : undefined;
+
+  useEffect(() => {
+    if (!selectedUser) return;
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setSelectedUser(null);
+    };
+    document.addEventListener("keydown", handleKeyDown);
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+      document.body.style.overflow = "";
+    };
+  }, [selectedUser]);
+
+  const registeredUsers = [...users].sort((a, b) => {
+    const rank = { pending: 0, rejected: 1, verified: 2, not_submitted: 3 };
+    const statusDiff = (rank[a.verificationStatus || "not_submitted"] ?? 3) - (rank[b.verificationStatus || "not_submitted"] ?? 3);
+    return statusDiff || a.name.localeCompare(b.name);
+  });
+
+  const handleDecision = async (decision: "approved" | "rejected") => {
+    if (!selectedRequest) return;
+    await reviewVerification(selectedRequest.id, decision);
+    setSelectedUser(null);
+  };
 
   const handleLogin = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -87,49 +118,52 @@ export default function AdminPage() {
               <div className="flex items-end justify-between gap-4">
                 <div>
                   <p className="section-kicker">Student status</p>
-                  <h2 id="queue-title" className="mt-2 text-2xl font-bold tracking-tight">Verification requests</h2>
+                  <h2 id="queue-title" className="mt-2 text-2xl font-bold tracking-tight">Registered users</h2>
                 </div>
-                <span className="hidden text-sm text-muted sm:block">{verifications.length} request{verifications.length === 1 ? "" : "s"} in the queue</span>
+                <span className="hidden text-sm text-muted sm:block">{users.length} member{users.length === 1 ? "" : "s"} in the workspace</span>
               </div>
 
-              {verifications.length ? (
-                <div className="mt-6 grid gap-4">
-                  {verifications.map((request) => (
-                    <article key={request.id} className={`card p-5 sm:p-6 ${request.status === "pending" ? "" : "opacity-80"}`}>
-                      <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
-                        <div className="flex min-w-0 items-start gap-4">
-                          <span className="avatar size-12"><GraduationCap size={22} aria-hidden="true" /></span>
-                          <div className="min-w-0">
-                            <div className="flex flex-wrap items-center gap-2">
-                              <h3 className="text-xl font-bold">{request.studentName}</h3>
-                              <StatusPill label={request.status === "pending" ? "Pending review" : request.status === "approved" ? "Approved" : "Rejected"} tone={request.status === "pending" ? "pending" : request.status === "approved" ? "success" : "danger"} />
-                            </div>
-                            <p className="mt-1 text-sm text-muted">Submitted {formatDate(request.submittedAt)}</p>
-                          </div>
-                        </div>
-                        {request.status === "pending" ? (
-                          <div className="flex gap-2 lg:shrink-0">
-                            <button type="button" className="btn btn-danger" onClick={() => reviewVerification(request.id, "rejected")}><X size={16} aria-hidden="true" />Reject</button>
-                            <button type="button" className="btn btn-primary" onClick={() => reviewVerification(request.id, "approved")}><Check size={16} aria-hidden="true" />Approve</button>
-                          </div>
-                        ) : null}
-                      </div>
-                      <dl className="mt-6 grid gap-4 border-t border-border pt-5 sm:grid-cols-2 lg:grid-cols-4">
-                        <div><dt className="text-xs font-bold uppercase tracking-wider text-muted">University</dt><dd className="mt-2 text-sm font-semibold">{request.university}</dd></div>
-                        <div><dt className="text-xs font-bold uppercase tracking-wider text-muted">School email</dt><dd className="mt-2 break-all text-sm font-semibold">{request.schoolEmail}</dd></div>
-                        <div><dt className="text-xs font-bold uppercase tracking-wider text-muted">Student number</dt><dd className="mt-2 font-mono text-sm font-semibold">{request.matricNumber}</dd></div>
-                        <div><dt className="text-xs font-bold uppercase tracking-wider text-muted">Skills</dt><dd className="mt-2 text-sm font-semibold">{request.skills?.join(", ") || "Not added"}</dd></div>
-                      </dl>
-                      <div className="mt-4 flex flex-wrap gap-3">
-                        {request.idCardUrl ? <a className="btn btn-secondary" href={request.idCardUrl} target="_blank" rel="noreferrer">Open ID card</a> : null}
-                        {request.portfolioUrl ? <a className="btn btn-secondary" href={request.portfolioUrl} target="_blank" rel="noreferrer">Open work link</a> : null}
-                      </div>
-                      {request.note ? <p className="mt-4 flex items-start gap-2 text-sm leading-6 text-muted"><ClipboardList size={16} className="mt-0.5 shrink-0" aria-hidden="true" />{request.note}</p> : null}
-                    </article>
-                  ))}
+              {registeredUsers.length ? (
+                <div className="mt-6 overflow-hidden rounded-2xl border border-border bg-surface">
+                  <div className="overflow-x-auto">
+                    <table className="w-full min-w-[760px] text-left">
+                      <thead className="border-b border-border bg-muted-surface/60 text-xs uppercase tracking-wider text-muted">
+                        <tr>
+                          <th scope="col" className="px-5 py-4 font-bold">Member</th>
+                          <th scope="col" className="px-5 py-4 font-bold">University</th>
+                          <th scope="col" className="px-5 py-4 font-bold">Verification</th>
+                          <th scope="col" className="px-5 py-4 font-bold">Joined</th>
+                          <th scope="col" className="px-5 py-4 text-right font-bold">Details</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-border">
+                        {registeredUsers.map((user) => {
+                          const request = verifications.find((item) => item.userId === user.id);
+                          const status = user.verificationStatus || "not_submitted";
+                          return (
+                            <tr key={user.id} className="align-middle hover:bg-muted-surface/40">
+                              <td className="px-5 py-4">
+                                <div className="flex items-center gap-3">
+                                  <span className="avatar size-10"><GraduationCap size={18} aria-hidden="true" /></span>
+                                  <div className="min-w-0">
+                                    <p className="truncate font-bold">{user.name}</p>
+                                    <p className="mt-1 flex items-center gap-1 text-sm text-muted"><Mail size={13} aria-hidden="true" />{user.email}</p>
+                                  </div>
+                                </div>
+                              </td>
+                              <td className="px-5 py-4 text-sm font-semibold">{user.university || "Not added"}</td>
+                              <td className="px-5 py-4"><StatusPill label={status === "pending" ? "Pending review" : status === "verified" ? "Verified" : status === "rejected" ? "Rejected" : "Not submitted"} tone={status === "pending" ? "pending" : status === "verified" ? "success" : status === "rejected" ? "danger" : "neutral"} /></td>
+                              <td className="px-5 py-4 text-sm text-muted">{request ? formatDate(request.submittedAt) : "—"}</td>
+                              <td className="px-5 py-4 text-right"><button type="button" className="btn btn-secondary" onClick={() => setSelectedUser(user)}><ExternalLink size={16} aria-hidden="true" />Review details</button></td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               ) : (
-                <div className="mt-6 empty-state"><span className="empty-icon"><BadgeCheck size={24} aria-hidden="true" /></span><h3 className="text-lg font-bold">Queue is clear</h3><p className="max-w-md text-sm leading-6 text-muted">New student verification requests will appear here.</p></div>
+                <div className="mt-6 empty-state"><span className="empty-icon"><BadgeCheck size={24} aria-hidden="true" /></span><h3 className="text-lg font-bold">No registered users yet</h3><p className="max-w-md text-sm leading-6 text-muted">New accounts will appear here for profile and verification review.</p></div>
               )}
             </section>
 
@@ -145,6 +179,35 @@ export default function AdminPage() {
           </>
         )}
       </div>
+      {selectedUser ? (
+        <>
+          <button type="button" aria-label="Dismiss member details" className="fixed inset-0 z-40 cursor-default bg-ink/60 backdrop-blur-sm" onClick={() => setSelectedUser(null)} />
+          <section role="dialog" aria-modal="true" aria-labelledby="member-details-title" className="fixed inset-x-4 top-[5vh] z-50 mx-auto max-h-[90vh] max-w-2xl overflow-y-auto rounded-2xl border border-border bg-surface p-6 shadow-2xl sm:inset-x-auto sm:p-8">
+            <div className="flex items-start justify-between gap-5">
+              <div className="flex items-start gap-4">
+                <span className="avatar size-12"><GraduationCap size={22} aria-hidden="true" /></span>
+                <div><p className="section-kicker">Member details</p><h2 id="member-details-title" className="mt-1 text-2xl font-bold">{selectedUser.name}</h2><p className="mt-1 text-sm text-muted">{selectedUser.email}</p></div>
+              </div>
+              <button type="button" className="btn btn-quiet" aria-label="Close member details" onClick={() => setSelectedUser(null)}><X size={18} aria-hidden="true" /></button>
+            </div>
+            <dl className="mt-8 grid gap-5 border-y border-border py-6 sm:grid-cols-2">
+              <div><dt className="text-xs font-bold uppercase tracking-wider text-muted">University</dt><dd className="mt-2 font-semibold">{selectedUser.university || "Not added"}</dd></div>
+              <div><dt className="text-xs font-bold uppercase tracking-wider text-muted">Course</dt><dd className="mt-2 font-semibold">{selectedUser.course || "Not added"}</dd></div>
+              <div><dt className="text-xs font-bold uppercase tracking-wider text-muted">School email</dt><dd className="mt-2 break-all font-semibold">{selectedUser.schoolEmail || "Not added"}</dd></div>
+              <div><dt className="text-xs font-bold uppercase tracking-wider text-muted">Matric number</dt><dd className="mt-2 font-mono font-semibold">{selectedUser.matricNumber || "Not added"}</dd></div>
+              <div className="sm:col-span-2"><dt className="text-xs font-bold uppercase tracking-wider text-muted">Skills</dt><dd className="mt-2 font-semibold">{selectedUser.skills?.join(", ") || "Not added"}</dd></div>
+            </dl>
+            <div className="mt-6 flex flex-wrap gap-3">
+              {selectedUser.idCardUrl ? <a className="btn btn-secondary" href={selectedUser.idCardUrl} target="_blank" rel="noreferrer"><ExternalLink size={16} aria-hidden="true" />Open ID card</a> : <span className="text-sm text-muted">No ID card uploaded yet.</span>}
+              {selectedUser.portfolioUrl ? <a className="btn btn-secondary" href={selectedUser.portfolioUrl} target="_blank" rel="noreferrer"><ExternalLink size={16} aria-hidden="true" />Open work link</a> : null}
+            </div>
+            <div className="mt-8 flex flex-col-reverse gap-3 border-t border-border pt-6 sm:flex-row sm:justify-between">
+              <button type="button" className="btn btn-quiet" onClick={() => setSelectedUser(null)}>Dismiss</button>
+              {selectedRequest?.status === "pending" ? <div className="flex flex-wrap gap-3"><button type="button" className="btn btn-danger" onClick={() => handleDecision("rejected")}><X size={16} aria-hidden="true" />Reject</button><button type="button" className="btn btn-primary" onClick={() => handleDecision("approved")}><Check size={16} aria-hidden="true" />Approve student</button></div> : <StatusPill label={selectedUser.verificationStatus === "verified" ? "Verified" : selectedUser.verificationStatus === "rejected" ? "Rejected" : "No request submitted"} tone={selectedUser.verificationStatus === "verified" ? "success" : selectedUser.verificationStatus === "rejected" ? "danger" : "neutral"} />}
+            </div>
+          </section>
+        </>
+      ) : null}
     </AppShell>
   );
 }
