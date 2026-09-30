@@ -14,6 +14,7 @@ export default function SignupPage() {
   const { signup } = useDemoStore();
   const [showPassword, setShowPassword] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [emailVerificationSent, setEmailVerificationSent] = useState(false);
   const [errors, setErrors] = useState<Errors>({});
   const formRef = useRef<HTMLFormElement>(null);
 
@@ -40,12 +41,17 @@ export default function SignupPage() {
 
     setSubmitting(true);
     try {
-        await signup({
+        const result = await signup({
           name: values.name,
           email: values.email,
           password: values.password,
         });
-        router.push("/student?welcome=1");
+        if (result.emailVerificationSent) {
+          setEmailVerificationSent(true);
+          setSubmitting(false);
+        } else {
+          router.push("/student?welcome=1");
+        }
     } catch {
       setErrors({ form: "We could not create that Firebase account. The email may already be in use, or the connection may have failed." });
       setSubmitting(false);
@@ -142,6 +148,7 @@ export default function SignupPage() {
               {submitting ? <LoaderCircle className="animate-spin" size={18} aria-hidden="true" /> : null}
               {submitting ? "Creating account…" : "Create account"}
             </button>
+            {emailVerificationSent ? <div className="success-banner mt-5"><div><p className="font-bold text-foreground">Check your personal email</p><p className="mt-1 leading-6">Firebase sent a verification link. Confirm it, then continue to your workspace.</p><button type="button" className="btn btn-secondary mt-4" onClick={() => router.push("/student?welcome=1")}>Continue to workspace</button></div></div> : null}
             {errors.form ? <p role="alert" className="field-error mt-3 text-center">{errors.form}</p> : null}
             <p className="mt-4 text-center text-xs leading-5 text-muted">By creating an account, you agree to keep your profile and submissions accurate.</p>
           </form>

@@ -3,6 +3,7 @@
 import {
   createUserWithEmailAndPassword,
   onAuthStateChanged,
+  sendEmailVerification,
   signInWithEmailAndPassword,
   signOut,
   updateProfile,
@@ -16,10 +17,17 @@ export async function registerFirebaseAccount(input: {
   name: string;
   email: string;
   password: string;
-}): Promise<UserCredential | null> {
+}): Promise<{ credential: UserCredential; emailVerificationSent: boolean } | null> {
   if (!firebaseEnabled || !firebaseAuth || !firestore) return null;
   const credential = await createUserWithEmailAndPassword(firebaseAuth, input.email, input.password);
   await updateProfile(credential.user, { displayName: input.name });
+  let emailVerificationSent = false;
+  try {
+    await sendEmailVerification(credential.user);
+    emailVerificationSent = true;
+  } catch {
+    // Account creation remains successful even if the mail provider is temporarily unavailable.
+  }
   const profile: User = {
     id: credential.user.uid,
     name: input.name,
@@ -29,7 +37,7 @@ export async function registerFirebaseAccount(input: {
     verificationStatus: "not_submitted",
   };
   await setDoc(doc(firestore, "users", credential.user.uid), profile);
-  return credential;
+  return { credential, emailVerificationSent };
 }
 
 export async function loginFirebaseAccount(email: string, password: string) {

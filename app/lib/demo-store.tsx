@@ -149,7 +149,7 @@ type DemoStore = DemoState & {
   authReady: boolean;
   currentUser?: User;
   setPersona: (persona: Persona) => void;
-  signup: (input: SignupInput) => Promise<string>;
+  signup: (input: SignupInput) => Promise<{ id: string; emailVerificationSent: boolean }>;
   updateProfile: (input: ProfileInput) => Promise<void>;
   submitVerification: (input: VerificationInput) => Promise<void>;
   reviewVerification: (requestId: string, decision: "approved" | "rejected") => Promise<void>;
@@ -417,8 +417,8 @@ export function DemoStoreProvider({ children }: { children: ReactNode }) {
     };
 
     const signup = async (input: SignupInput) => {
-      const firebaseCredential = await registerFirebaseAccount(input);
-      const id = firebaseCredential?.user.uid ?? makeId("member");
+      const firebaseRegistration = await registerFirebaseAccount(input);
+      const id = firebaseRegistration?.credential.user.uid ?? makeId("member");
       const user: User = {
         id,
         name: input.name.trim(),
@@ -433,7 +433,7 @@ export function DemoStoreProvider({ children }: { children: ReactNode }) {
         activePersona: "student",
         activeUserId: id,
       }));
-      return id;
+      return { id, emailVerificationSent: Boolean(firebaseRegistration?.emailVerificationSent) };
     };
 
     const login = async (email: string, password: string) => {
