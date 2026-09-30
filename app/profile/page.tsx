@@ -35,7 +35,10 @@ export default function ProfilePage() {
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const data = new FormData(event.currentTarget);
+    const submitter = (event.nativeEvent as SubmitEvent).submitter;
+    const data = submitter instanceof HTMLButtonElement
+      ? new FormData(event.currentTarget, submitter)
+      : new FormData(event.currentTarget);
     const intent = String(data.get("intent") || "save");
     const values = {
       university: String(data.get("university") || "").trim(),
