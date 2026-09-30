@@ -1,10 +1,12 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { BadgeCheck, ExternalLink, GraduationCap, LoaderCircle, Save, ShieldCheck } from "lucide-react";
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type ChangeEvent, type FormEvent } from "react";
 import { AppShell } from "../components/app-shell";
 import { useDemoStore } from "../lib/demo-store";
+import { prepareStudentIdImage } from "../lib/firebase-actions";
 
 type Errors = Partial<Record<"university" | "schoolEmail" | "matricNumber" | "idCardUrl" | "form", string>>;
 
@@ -13,6 +15,23 @@ export default function ProfilePage() {
   const [errors, setErrors] = useState<Errors>({});
   const [submitting, setSubmitting] = useState(false);
   const [savedMessage, setSavedMessage] = useState("");
+  const [idPreview, setIdPreview] = useState("");
+
+  useEffect(() => {
+    setIdPreview(currentUser?.idCardUrl || "");
+  }, [currentUser?.idCardUrl]);
+
+  const handleIdChange = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    try {
+      setIdPreview(await prepareStudentIdImage(file));
+      setErrors((current) => ({ ...current, idCardUrl: undefined }));
+    } catch (error) {
+      setIdPreview("");
+      setErrors((current) => ({ ...current, idCardUrl: error instanceof Error ? error.message : "That ID image could not be prepared." }));
+    }
+  };
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -107,7 +126,7 @@ export default function ProfilePage() {
             <aside className="card p-5 sm:p-7 lg:col-span-2">
               <p className="section-kicker">Student verification</p>
               <h2 className="mt-2 text-xl font-bold">Show that you are a current student</h2>
-              <p className="mt-3 text-sm leading-6 text-muted">These details are sent to the admin queue. Your ID link should point to a secure view of your student card.</p>
+              <p className="mt-3 text-sm leading-6 text-muted">These details are sent to the admin queue. Your ID image is compressed and stored with your verification request.</p>
 
               <div className="mt-6 grid gap-5">
                 <div className="field">
@@ -122,9 +141,9 @@ export default function ProfilePage() {
                 </div>
                 <div className="field">
                   <label htmlFor="idCard">Student ID card upload</label>
-                  <input id="idCard" name="idCard" type="file" accept="image/jpeg,image/png,image/webp" className="input" aria-invalid={errors.idCardUrl ? "true" : undefined} />
-                  <p className="field-hint">JPG, PNG, or PDF up to 5 MB. Admins will review it with your student details.</p>
-                  {currentUser?.idCardUrl ? <a className="mt-2 inline-flex items-center gap-1 text-sm font-semibold text-primary hover:underline" href={currentUser.idCardUrl} target="_blank" rel="noreferrer">Open uploaded ID card <ExternalLink size={14} aria-hidden="true" /></a> : null}
+                  <input id="idCard" name="idCard" type="file" accept="image/jpeg,image/png,image/webp" className="input" onChange={(event) => { void handleIdChange(event); }} aria-invalid={errors.idCardUrl ? "true" : undefined} />
+                  <p className="field-hint">JPG, PNG, or WebP up to 10 MB. The image is compressed before it is saved.</p>
+                  {idPreview ? <div className="mt-4 overflow-hidden rounded-xl border border-border bg-muted-surface p-2"><Image src={idPreview} alt="Student ID preview" width={1200} height={900} unoptimized className="max-h-56 w-full rounded-lg object-contain" /><p className="mt-2 text-xs text-muted">Preview ready. Submit the verification request to save it.</p></div> : null}
                   {errors.idCardUrl ? <p className="field-error">{errors.idCardUrl}</p> : null}
                 </div>
               </div>

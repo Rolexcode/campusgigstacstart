@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, type FormEvent } from "react";
+import Image from "next/image";
 import {
   AlertCircle,
   BadgeCheck,
@@ -19,21 +20,25 @@ import { StatusPill } from "../components/status-pill";
 import { useDemoStore, type User } from "../lib/demo-store";
 
 export default function AdminPage() {
-  const { verifications, users, gigs, applications, reviewVerification } = useDemoStore();
+  const { verifications, users, gigs, applications, reviewVerification, refreshData } = useDemoStore();
   const [authenticated, setAuthenticated] = useState(false);
   const [pin, setPin] = useState("");
   const [error, setError] = useState("");
   const [checking, setChecking] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [previewIdCard, setPreviewIdCard] = useState<{ src: string; name: string } | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
 
   const selectedRequest = selectedUser
     ? verifications.find((request) => request.userId === selectedUser.id)
     : undefined;
 
   useEffect(() => {
-    if (!selectedUser) return;
+    if (!selectedUser && !previewIdCard) return;
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setSelectedUser(null);
+      if (event.key !== "Escape") return;
+      if (previewIdCard) setPreviewIdCard(null);
+      else setSelectedUser(null);
     };
     document.addEventListener("keydown", handleKeyDown);
     document.body.style.overflow = "hidden";
@@ -41,7 +46,7 @@ export default function AdminPage() {
       document.removeEventListener("keydown", handleKeyDown);
       document.body.style.overflow = "";
     };
-  }, [selectedUser]);
+  }, [previewIdCard, selectedUser]);
 
   const registeredUsers = [...users].sort((a, b) => {
     const rank = { pending: 0, rejected: 1, verified: 2, not_submitted: 3 };
@@ -53,6 +58,15 @@ export default function AdminPage() {
     if (!selectedRequest) return;
     await reviewVerification(selectedRequest.id, decision);
     setSelectedUser(null);
+  };
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    try {
+      await refreshData();
+    } finally {
+      setRefreshing(false);
+    }
   };
 
   const handleLogin = (event: FormEvent<HTMLFormElement>) => {
@@ -120,7 +134,7 @@ export default function AdminPage() {
                   <p className="section-kicker">Student status</p>
                   <h2 id="queue-title" className="mt-2 text-2xl font-bold tracking-tight">Registered users</h2>
                 </div>
-                <span className="hidden text-sm text-muted sm:block">{users.length} member{users.length === 1 ? "" : "s"} in the workspace</span>
+                <div className="flex items-center gap-3"><span className="hidden text-sm text-muted sm:block">{users.length} member{users.length === 1 ? "" : "s"} in the workspace</span><button type="button" className="btn btn-secondary" onClick={() => { void handleRefresh(); }} disabled={refreshing} aria-busy={refreshing}>{refreshing ? "Refreshing…" : "Refresh queue"}</button></div>
               </div>
 
               {registeredUsers.length ? (
@@ -198,12 +212,26 @@ export default function AdminPage() {
               <div className="sm:col-span-2"><dt className="text-xs font-bold uppercase tracking-wider text-muted">Skills</dt><dd className="mt-2 font-semibold">{selectedUser.skills?.join(", ") || "Not added"}</dd></div>
             </dl>
             <div className="mt-6 flex flex-wrap gap-3">
-              {selectedUser.idCardUrl ? <a className="btn btn-secondary" href={selectedUser.idCardUrl} target="_blank" rel="noreferrer"><ExternalLink size={16} aria-hidden="true" />Open ID card</a> : <span className="text-sm text-muted">No ID card uploaded yet.</span>}
+              {selectedUser.idCardUrl ? <button type="button" className="btn btn-secondary" onClick={() => setPreviewIdCard({ src: selectedUser.idCardUrl || "", name: selectedUser.name })}><ExternalLink size={16} aria-hidden="true" />View ID card</button> : <span className="text-sm text-muted">No ID card uploaded yet.</span>}
               {selectedUser.portfolioUrl ? <a className="btn btn-secondary" href={selectedUser.portfolioUrl} target="_blank" rel="noreferrer"><ExternalLink size={16} aria-hidden="true" />Open work link</a> : null}
             </div>
             <div className="mt-8 flex flex-col-reverse gap-3 border-t border-border pt-6 sm:flex-row sm:justify-between">
               <button type="button" className="btn btn-quiet" onClick={() => setSelectedUser(null)}>Dismiss</button>
               {selectedRequest?.status === "pending" ? <div className="flex flex-wrap gap-3"><button type="button" className="btn btn-danger" onClick={() => handleDecision("rejected")}><X size={16} aria-hidden="true" />Reject</button><button type="button" className="btn btn-primary" onClick={() => handleDecision("approved")}><Check size={16} aria-hidden="true" />Approve student</button></div> : <StatusPill label={selectedUser.verificationStatus === "verified" ? "Verified" : selectedUser.verificationStatus === "rejected" ? "Rejected" : "No request submitted"} tone={selectedUser.verificationStatus === "verified" ? "success" : selectedUser.verificationStatus === "rejected" ? "danger" : "neutral"} />}
+            </div>
+          </section>
+        </>
+      ) : null}
+      {previewIdCard ? (
+        <>
+          <button type="button" aria-label="Close ID card preview" className="fixed inset-0 z-[60] cursor-default bg-ink/70 backdrop-blur-sm" onClick={() => setPreviewIdCard(null)} />
+          <section role="dialog" aria-modal="true" aria-labelledby="id-card-preview-title" className="fixed inset-x-4 top-[5vh] z-[70] mx-auto max-h-[90vh] max-w-3xl overflow-hidden rounded-2xl border border-border bg-surface p-4 shadow-2xl sm:inset-x-auto sm:p-6">
+            <div className="flex items-center justify-between gap-4">
+              <div><p className="section-kicker">Verification evidence</p><h2 id="id-card-preview-title" className="mt-1 text-xl font-bold">{previewIdCard.name}&apos;s student ID</h2></div>
+              <button type="button" className="btn btn-quiet" aria-label="Close ID card preview" onClick={() => setPreviewIdCard(null)}><X size={18} aria-hidden="true" /></button>
+            </div>
+            <div className="mt-5 max-h-[70vh] overflow-auto rounded-xl border border-border bg-ink/5 p-2">
+              <Image src={previewIdCard.src} alt={`${previewIdCard.name}'s student ID card`} width={1200} height={900} unoptimized className="mx-auto h-auto max-h-[65vh] w-auto max-w-full rounded-lg object-contain" />
             </div>
           </section>
         </>

@@ -58,6 +58,8 @@ export type Gig = {
   location: string;
   createdAt: string;
   status: "open" | "closed";
+  selectedApplicantId?: string;
+  selectedApplicantName?: string;
   proofTask: ProofTask;
 };
 
@@ -154,7 +156,9 @@ type DemoStore = DemoState & {
   createGig: (input: GigInput) => Promise<string>;
   submitApplication: (gigId: string, input: ApplicationInput) => Promise<void>;
   shortlistApplication: (applicationId: string) => Promise<void>;
+  selectApplicant: (applicationId: string) => Promise<void>;
   saveReview: (applicationId: string, decision: Review["decision"], note: string) => Promise<void>;
+  refreshData: () => Promise<void>;
   resetDemo: () => void;
   login: (email: string, password: string) => Promise<"student" | "employer" | "member" | null>;
   logout: () => Promise<void>;
@@ -631,6 +635,31 @@ export function DemoStoreProvider({ children }: { children: ReactNode }) {
       }));
     };
 
+    const selectApplicant = async (applicationId: string) => {
+      const application = state.applications.find((item) => item.id === applicationId);
+      const gig = state.gigs.find((item) => item.id === application?.gigId);
+      if (!application || !gig) return;
+      const updatedGig: Gig = {
+        ...gig,
+        status: "closed",
+        selectedApplicantId: application.studentId,
+        selectedApplicantName: application.studentName,
+      };
+      const updatedApplications = state.applications
+        .filter((item) => item.gigId === gig.id)
+        .map((item) => ({
+          ...item,
+          status: item.id === applicationId ? "shortlisted" as const : "not_selected" as const,
+        }));
+      await persistFirestoreRecord("gigs", updatedGig.id, updatedGig);
+      await Promise.all(updatedApplications.map((item) => persistFirestoreRecord("applications", item.id, item)));
+      setState((current) => ({
+        ...current,
+        gigs: current.gigs.map((item) => item.id === updatedGig.id ? updatedGig : item),
+        applications: current.applications.map((item) => updatedApplications.find((next) => next.id === item.id) || item),
+      }));
+    };
+
     const saveReview = async (
       applicationId: string,
       decision: Review["decision"],
@@ -659,6 +688,18 @@ export function DemoStoreProvider({ children }: { children: ReactNode }) {
       }));
     };
 
+    const refreshData = async () => {
+      if (!firebaseUserId) return;
+      const [users, gigs, applications, verifications, reviews] = await Promise.all([
+        loadFirebaseCollection<User>("users"),
+        loadFirebaseCollection<Gig>("gigs"),
+        loadFirebaseCollection<Application>("applications"),
+        loadFirebaseCollection<VerificationRequest>("verifications"),
+        loadFirebaseCollection<Review>("reviews"),
+      ]);
+      setState((current) => ({ ...current, users, gigs, applications, verifications, reviews }));
+    };
+
     const resetDemo = () => {
       window.localStorage.removeItem(STORAGE_KEY);
       setState(initialState);
@@ -677,7 +718,9 @@ export function DemoStoreProvider({ children }: { children: ReactNode }) {
       createGig,
       submitApplication,
       shortlistApplication,
+      selectApplicant,
       saveReview,
+      refreshData,
       resetDemo,
       login,
       logout,

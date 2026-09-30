@@ -6,6 +6,7 @@ import {
   ArrowLeft,
   ArrowUpRight,
   BadgeCheck,
+  CheckCircle2,
   ExternalLink,
   Code2,
   Link2,
@@ -25,8 +26,9 @@ import { findGigByRouteKey } from "../../../../lib/gig-routing";
 
 export default function ApplicantsPage() {
   const params = useParams<{ slug: string }>();
-  const { gigs, applications, reviews, shortlistApplication, saveReview } = useDemoStore();
+  const { gigs, applications, users, reviews, shortlistApplication, selectApplicant, saveReview } = useDemoStore();
   const [openApplication, setOpenApplication] = useState<string | null>(null);
+  const [openProfile, setOpenProfile] = useState<string | null>(null);
   const [reviewDrafts, setReviewDrafts] = useState<Record<string, { decision: "strong_yes" | "follow_up" | "pass"; note: string }>>({});
   const [savedReview, setSavedReview] = useState<string | null>(null);
 
@@ -62,10 +64,17 @@ export default function ApplicantsPage() {
           <div>
             <p className="section-kicker">Applicant review</p>
             <h1 className="mt-2 text-3xl font-bold tracking-tight sm:text-4xl">{gig.title}</h1>
-            <p className="mt-3 max-w-2xl text-muted">Compare the proof, context, and confidence behind each application.</p>
+            <p className="mt-3 max-w-2xl text-muted">Review each Proof Task, open the student profile, then choose who moves forward.</p>
           </div>
           <div className="flex items-center gap-2 text-sm font-semibold text-secondary"><Users size={17} aria-hidden="true" />{gigApplications.length} applicant{gigApplications.length === 1 ? "" : "s"}</div>
         </div>
+
+        {gig.selectedApplicantId ? (
+          <div className="mt-6 flex flex-col gap-4 rounded-2xl bg-ink p-5 text-white sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-start gap-3"><CheckCircle2 className="mt-0.5 shrink-0 text-emerald-300" size={21} aria-hidden="true" /><div><p className="font-bold">{gig.selectedApplicantName} selected for this gig</p><p className="mt-1 text-sm leading-6 text-slate-300">The position is now closed. Their profile and Proof Task remain available for the next hiring step.</p></div></div>
+            <StatusPill label="Position filled" tone="success" />
+          </div>
+        ) : null}
 
         {gigApplications.length ? (
           <>
@@ -83,7 +92,10 @@ export default function ApplicantsPage() {
             <section className="mt-8 grid gap-5 lg:grid-cols-2" aria-label="Applicant comparison">
               {gigApplications.map((application) => {
                 const proofOpen = openApplication === application.id;
+                const profileOpen = openProfile === application.id;
                 const existingReview = reviews.find((item) => item.applicationId === application.id);
+                const studentProfile = users.find((user) => user.id === application.studentId);
+                const selected = gig.selectedApplicantId === application.studentId;
                 const reviewDraft = reviewDrafts[application.id] ?? {
                   decision: existingReview?.decision ?? "follow_up",
                   note: existingReview?.note ?? "",
@@ -102,7 +114,7 @@ export default function ApplicantsPage() {
                             <p className="mt-1 text-sm text-muted">{application.university}</p>
                           </div>
                         </div>
-                        {application.status === "shortlisted" ? <StatusPill label="Shortlisted" tone="success" /> : <StatusPill label="In review" tone="neutral" />}
+                        {selected ? <StatusPill label="Selected" tone="success" /> : application.status === "not_selected" ? <StatusPill label="Not selected" tone="danger" /> : application.status === "shortlisted" ? <StatusPill label="Shortlisted" tone="success" /> : <StatusPill label="In review" tone="neutral" />}
                       </div>
 
                       <div className="mt-5 flex flex-wrap gap-2">
@@ -121,10 +133,17 @@ export default function ApplicantsPage() {
                         <button type="button" className="btn btn-secondary flex-1" onClick={() => setOpenApplication(proofOpen ? null : application.id)} aria-expanded={proofOpen}>
                           <ExternalLink size={16} aria-hidden="true" />{proofOpen ? "Hide submission" : "Review submission"}
                         </button>
-                        <button type="button" className={`btn flex-1 ${application.status === "shortlisted" ? "btn-quiet" : "btn-primary"}`} onClick={() => { void shortlistApplication(application.id); }} disabled={application.status === "shortlisted"}>
+                        <button type="button" className="btn btn-secondary flex-1" onClick={() => setOpenProfile(profileOpen ? null : application.id)} aria-expanded={profileOpen}>
+                          <UserRound size={16} aria-hidden="true" />{profileOpen ? "Hide profile" : "View profile"}
+                        </button>
+                        <button type="button" className={`btn flex-1 ${application.status === "shortlisted" ? "btn-quiet" : "btn-primary"}`} onClick={() => { void shortlistApplication(application.id); }} disabled={application.status === "shortlisted" || selected || application.status === "not_selected"}>
                           <ShieldCheck size={16} aria-hidden="true" />{application.status === "shortlisted" ? "Shortlisted" : "Shortlist student"}
                         </button>
                       </div>
+
+                      <button type="button" className="btn btn-primary mt-3 w-full" onClick={() => { void selectApplicant(application.id); }} disabled={Boolean(gig.selectedApplicantId) || application.status === "not_selected"}>
+                        <CheckCircle2 size={16} aria-hidden="true" />{selected ? "Student selected" : gig.selectedApplicantId ? "Position filled" : "Select student"}
+                      </button>
 
                       <div className="mt-5 rounded-xl border border-border bg-surface-raised p-4">
                         <div className="flex items-start gap-2">
@@ -180,6 +199,17 @@ export default function ApplicantsPage() {
                             </div>
                           </>
                         ) : <p className="mt-4 text-sm text-muted">There is no Proof Task response to open yet.</p>}
+                      </div>
+                    ) : null}
+                    {profileOpen ? (
+                      <div className="border-t border-border bg-surface-raised p-5 sm:p-6">
+                        <p className="text-xs font-bold uppercase tracking-widest text-muted">Student profile</p>
+                        <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                          <div><p className="text-xs font-bold uppercase tracking-wider text-muted">Course</p><p className="mt-2 font-semibold">{studentProfile?.course || "Not added"}</p></div>
+                          <div><p className="text-xs font-bold uppercase tracking-wider text-muted">University</p><p className="mt-2 font-semibold">{studentProfile?.university || application.university}</p></div>
+                          <div className="sm:col-span-2"><p className="text-xs font-bold uppercase tracking-wider text-muted">Skills</p><p className="mt-2 font-semibold">{studentProfile?.skills?.join(", ") || application.skills.join(", ") || "Not added"}</p></div>
+                        </div>
+                        {studentProfile?.portfolioUrl ? <a className="btn btn-secondary mt-5" href={studentProfile.portfolioUrl} target="_blank" rel="noreferrer"><Link2 size={16} aria-hidden="true" />Open work profile <ArrowUpRight size={14} aria-hidden="true" /></a> : <p className="mt-5 text-sm text-muted">No work profile link added.</p>}
                       </div>
                     ) : null}
                   </article>
