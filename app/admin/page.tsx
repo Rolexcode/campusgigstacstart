@@ -221,7 +221,7 @@ export default function AdminPage() {
             <dl className="mt-8 grid gap-5 border-y border-border py-6 sm:grid-cols-2">
               <div><dt className="text-xs font-bold uppercase tracking-wider text-muted">University</dt><dd className="mt-2 font-semibold">{selectedUser.university || "Not added"}</dd></div>
               <div><dt className="text-xs font-bold uppercase tracking-wider text-muted">Course</dt><dd className="mt-2 font-semibold">{selectedUser.course || "Not added"}</dd></div>
-              <div><dt className="text-xs font-bold uppercase tracking-wider text-muted">School email</dt><dd className="mt-2 break-all font-semibold">{selectedUser.schoolEmail || "Not added"}</dd></div>
+              <div><dt className="text-xs font-bold uppercase tracking-wider text-muted">Personal email</dt><dd className="mt-2 break-all font-semibold">{selectedUser.schoolEmail || selectedUser.email || "Not added"}</dd></div>
               <div><dt className="text-xs font-bold uppercase tracking-wider text-muted">Matric number</dt><dd className="mt-2 font-mono font-semibold">{selectedUser.matricNumber || "Not added"}</dd></div>
               <div className="sm:col-span-2"><dt className="text-xs font-bold uppercase tracking-wider text-muted">Skills</dt><dd className="mt-2 font-semibold">{selectedUser.skills?.join(", ") || "Not added"}</dd></div>
             </dl>

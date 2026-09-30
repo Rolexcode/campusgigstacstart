@@ -53,7 +53,7 @@ export default function ProfilePage() {
     const nextErrors: Errors = {};
     if (intent === "verify") {
       if (!values.university) nextErrors.university = "Add your university before requesting verification.";
-      if (!values.schoolEmail.includes("@")) nextErrors.schoolEmail = "Add a valid school email before requesting verification.";
+      if (!values.schoolEmail.includes("@")) nextErrors.schoolEmail = "Add a valid personal email before requesting verification.";
       if (!values.matricNumber) nextErrors.matricNumber = "Add your matric number before requesting verification.";
       if (!values.idCardUrl && !values.idCardFile) nextErrors.idCardUrl = "Upload your student ID card before requesting verification.";
     }
@@ -82,7 +82,7 @@ export default function ProfilePage() {
             <div>
               <p className="section-kicker">Your profile</p>
               <h1 className="mt-2 text-3xl font-bold tracking-tight sm:text-4xl">Make your CampusGig profile useful.</h1>
-              <p className="mt-3 max-w-2xl text-muted">Keep your skills and work links current. If you are a student, add your school details and ID link here for verification.</p>
+              <p className="mt-3 max-w-2xl text-muted">Keep your skills and work links current. If you are a student, add your university details and ID card here for verification.</p>
             </div>
             {currentUser?.verificationStatus === "verified" ? (
               <span className="status-pill status-pill-success"><BadgeCheck size={15} aria-hidden="true" />Verified student</span>
@@ -130,8 +130,8 @@ export default function ProfilePage() {
 
               <div className="mt-6 grid gap-5">
                 <div className="field">
-                  <label htmlFor="schoolEmail">School email</label>
-                  <input id="schoolEmail" name="schoolEmail" type="email" className="input" defaultValue={currentUser?.schoolEmail || currentUser?.email} placeholder="you@university.edu" aria-invalid={errors.schoolEmail ? "true" : undefined} />
+                  <label htmlFor="schoolEmail">Personal email</label>
+                  <input id="schoolEmail" name="schoolEmail" type="email" className="input" defaultValue={currentUser?.schoolEmail || currentUser?.email} placeholder="you@example.com" aria-invalid={errors.schoolEmail ? "true" : undefined} />
                   {errors.schoolEmail ? <p className="field-error">{errors.schoolEmail}</p> : null}
                 </div>
                 <div className="field">
