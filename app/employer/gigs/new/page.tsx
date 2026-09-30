@@ -147,7 +147,7 @@ export default function NewGigPage() {
                 <Link href="/employer" className="btn btn-secondary">Cancel</Link>
                 <button type="submit" className="btn btn-primary" disabled={submitting} aria-busy={submitting}>
                   {submitting ? <LoaderCircle className="animate-spin" size={17} aria-hidden="true" /> : null}
-                  {submitting ? "Publishing gig…" : `Publish for ${currentUser?.company || "Nuru Labs"}`}
+                  {submitting ? "Publishing gig…" : `Publish from ${currentUser?.name || "your account"}`}
                 </button>
                 {errors.form ? <p role="alert" className="field-error mt-3 text-right">{errors.form}</p> : null}
               </div>

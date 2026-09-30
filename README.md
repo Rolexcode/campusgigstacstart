@@ -12,19 +12,20 @@ The primary StacStart track is **Future of Work**, with **Access & Inclusion** a
 
 ## Judge walkthrough
 
-1. Open the student workspace and browse the seeded opportunity.
-2. Open the Proof Task and inspect the evidence-first application flow.
-3. Switch to the employer workspace to compare applicants side by side.
-4. Open a submission, leave a team recommendation, and shortlist the strongest proof.
-5. Open the admin queue with demo PIN `2026` to see the lightweight verification step.
-6. To test persistence, create an account, sign out, and sign back in from another browser or device. The profile and records are stored in Firebase, not only in the browser.
+1. Create one account and open the student workspace.
+2. Complete verification, then browse the seeded opportunity and open its Proof Task.
+3. Submit the proof, then switch to the employer workspace in the same account.
+4. Open the submission, leave a team recommendation, and shortlist the strongest proof.
+5. Open the admin queue with PIN `2026` to see the lightweight verification step.
+6. To test persistence, sign out and sign back in from another browser or device. The profile and records are stored in Firebase, not only in the browser.
 
 ## What makes the demo different
 
 - **Proof Tasks:** one small, real slice of work replaces an experience wall.
 - **Verification:** a visible student-status signal separates identity trust from skill assessment.
 - **Team review:** “Strong yes”, “Follow up”, or “Pass” plus one handoff note keeps hiring decisions moving across a distributed team.
-- **African context:** remote-friendly opportunities, Nigerian naira examples, and university-first onboarding.
+- **Universal accounts:** one account can post work or apply as a verified student; sign-up does not force a permanent role.
+- **African context:** remote-friendly opportunities, Nigerian naira examples, and university-first verification.
 
 ## Backend architecture
 

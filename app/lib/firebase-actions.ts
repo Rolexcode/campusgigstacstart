@@ -16,10 +16,6 @@ export async function registerFirebaseAccount(input: {
   name: string;
   email: string;
   password: string;
-  role: "student" | "employer";
-  university?: string;
-  course?: string;
-  company?: string;
 }): Promise<UserCredential | null> {
   if (!firebaseEnabled || !firebaseAuth || !firestore) return null;
   const credential = await createUserWithEmailAndPassword(firebaseAuth, input.email, input.password);
@@ -28,12 +24,9 @@ export async function registerFirebaseAccount(input: {
     id: credential.user.uid,
     name: input.name,
     email: input.email,
-    role: input.role,
-    university: input.university,
-    course: input.course,
-    company: input.company,
+    role: "member",
     skills: [],
-    verificationStatus: input.role === "student" ? "not_submitted" : undefined,
+    verificationStatus: "not_submitted",
   };
   await setDoc(doc(firestore, "users", credential.user.uid), profile);
   return credential;

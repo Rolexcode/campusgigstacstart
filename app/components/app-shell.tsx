@@ -16,7 +16,7 @@ import {
 } from "lucide-react";
 import type { ReactNode } from "react";
 import { BrandMark } from "./brand-mark";
-import { useDemoStore } from "../lib/demo-store";
+import { useDemoStore, type Persona } from "../lib/demo-store";
 
 const routes = {
   student: [
@@ -39,9 +39,15 @@ const personaMeta = {
 export function AppShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
-  const { activePersona, currentUser, logout, backendConnected, authReady } = useDemoStore();
+  const { activePersona, currentUser, setPersona, logout, backendConnected, authReady } = useDemoStore();
   const isWorkspaceRoute = pathname.startsWith("/student") || pathname.startsWith("/employer");
   const routePersona = pathname.startsWith("/admin") ? "admin" : activePersona;
+
+  const changePersona = (persona: Persona) => {
+    if (persona === "admin") return;
+    setPersona(persona);
+    router.push(personaMeta[persona].href);
+  };
 
   useEffect(() => {
     if (isWorkspaceRoute && authReady && !backendConnected) {
@@ -93,17 +99,16 @@ export function AppShell({ children }: { children: ReactNode }) {
           </div>
 
           <div className="flex items-center gap-2">
-            {backendConnected ? <div className="persona-switcher" aria-label="Current workspace">
-              {(() => {
-                const persona = currentUser?.role || "student";
+            {backendConnected ? <div className="persona-switcher" aria-label="Workspace switcher">
+              {(["student", "employer"] as const).map((persona) => {
                 const Icon = personaMeta[persona].icon;
                 return (
-                  <Link href={personaMeta[persona].href} className="persona-button persona-button-active" aria-current="page">
+                  <button key={persona} type="button" className={`persona-button ${activePersona === persona ? "persona-button-active" : ""}`} onClick={() => changePersona(persona)} aria-pressed={activePersona === persona}>
                     <Icon size={15} aria-hidden="true" />
                     <span className="hidden sm:inline">{personaMeta[persona].label}</span>
-                  </Link>
+                  </button>
                 );
-              })()}
+              })}
             </div> : null}
             {backendConnected ? <details className="profile-menu">
               <summary className="profile-trigger focus-ring">

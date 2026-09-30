@@ -34,7 +34,7 @@ export default function EmployerDashboardPage() {
               <div>
                 <p className="section-kicker">Employer workspace</p>
                 <h1 className="mt-2 text-3xl font-bold tracking-tight sm:text-4xl">See the work before you make the hire.</h1>
-                <p className="mt-3 max-w-2xl text-muted">{currentUser?.company || "Nuru Labs"} uses Proof Tasks to compare how students think, build, and communicate.</p>
+                <p className="mt-3 max-w-2xl text-muted">Post a clear opportunity, compare how applicants think and build, then bring your team into the shortlist.</p>
               </div>
               <Link href="/employer/gigs/new" className="btn btn-primary shrink-0"><Plus size={17} aria-hidden="true" />Post a gig</Link>
             </div>

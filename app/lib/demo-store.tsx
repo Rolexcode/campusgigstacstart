@@ -26,7 +26,8 @@ export type User = {
   id: string;
   name: string;
   email: string;
-  role: "student" | "employer";
+  /** Legacy role values are kept readable for existing records; new accounts are universal members. */
+  role: "member" | "student" | "employer";
   university?: string;
   course?: string;
   company?: string;
@@ -107,10 +108,6 @@ type SignupInput = {
   name: string;
   email: string;
   password: string;
-  role: "student" | "employer";
-  university?: string;
-  course?: string;
-  company?: string;
 };
 
 type GigInput = Omit<Gig, "id" | "employerId" | "company" | "createdAt" | "status">;
@@ -138,7 +135,7 @@ type DemoStore = DemoState & {
   shortlistApplication: (applicationId: string) => Promise<void>;
   saveReview: (applicationId: string, decision: Review["decision"], note: string) => Promise<void>;
   resetDemo: () => void;
-  login: (email: string, password: string) => Promise<"student" | "employer" | null>;
+  login: (email: string, password: string) => Promise<"student" | "employer" | "member" | null>;
   logout: () => Promise<void>;
   backendConnected: boolean;
 };
@@ -346,6 +343,7 @@ export function DemoStoreProvider({ children }: { children: ReactNode }) {
           loadFirebaseCollection<Review>("reviews"),
         ]);
         if (cancelled) return;
+        const authProfile = users.find((user) => user.id === authUser.uid);
         setState((current) => ({
           ...current,
           users,
@@ -354,7 +352,11 @@ export function DemoStoreProvider({ children }: { children: ReactNode }) {
           verifications,
           reviews,
           activeUserId: authUser.uid,
-          activePersona: users.find((user) => user.id === authUser.uid)?.role ?? current.activePersona,
+          activePersona: authProfile?.role === "employer"
+            ? "employer"
+            : authProfile?.role === "student"
+              ? "student"
+              : current.activePersona,
         }));
       } catch {
         // Keep the seeded experience available if a backend read is temporarily unavailable.
@@ -376,38 +378,34 @@ export function DemoStoreProvider({ children }: { children: ReactNode }) {
 
   const value = useMemo<DemoStore>(() => {
     const setPersona = (persona: Persona) => {
-      if (firebaseUserId && persona !== currentUser?.role) return;
-      const personaId =
-        persona === "student"
-          ? "student-amina"
-          : persona === "employer"
-            ? "employer-nuru"
-            : state.activeUserId;
       setState((current) => ({
         ...current,
         activePersona: persona,
-        activeUserId: persona === "admin" ? current.activeUserId : personaId,
+        activeUserId: firebaseUserId
+          ? current.activeUserId
+          : persona === "student"
+            ? "student-amina"
+            : persona === "employer"
+              ? "employer-nuru"
+              : current.activeUserId,
       }));
     };
 
     const signup = async (input: SignupInput) => {
       const firebaseCredential = await registerFirebaseAccount(input);
-      const id = firebaseCredential?.user.uid ?? makeId(input.role);
+      const id = firebaseCredential?.user.uid ?? makeId("member");
       const user: User = {
         id,
         name: input.name.trim(),
         email: input.email.trim().toLowerCase(),
-        role: input.role,
-        university: input.university?.trim(),
-        course: input.course?.trim(),
-        company: input.company?.trim(),
+        role: "member",
         skills: [],
-        verificationStatus: input.role === "student" ? "not_submitted" : undefined,
+        verificationStatus: "not_submitted",
       };
       setState((current) => ({
         ...current,
         users: [...current.users, user],
-        activePersona: input.role,
+        activePersona: "student",
         activeUserId: id,
       }));
       return id;
@@ -423,10 +421,10 @@ export function DemoStoreProvider({ children }: { children: ReactNode }) {
           ...current,
           users: profiles,
           activeUserId: profile.id,
-          activePersona: profile.role,
+          activePersona: profile.role === "employer" ? "employer" : "student",
         }));
       }
-      return profile?.role ?? "student";
+      return profile?.role === "employer" ? "employer" : profile?.role === "student" ? "student" : "member";
     };
 
     const logout = async () => {
@@ -507,7 +505,7 @@ export function DemoStoreProvider({ children }: { children: ReactNode }) {
         ...input,
         id,
         employerId: employer?.id ?? "employer-nuru",
-        company: employer?.company || "Nuru Labs",
+        company: employer?.company || employer?.name || "CampusGig member",
         createdAt: new Date().toISOString(),
         status: "open",
       };
@@ -519,6 +517,9 @@ export function DemoStoreProvider({ children }: { children: ReactNode }) {
     const submitApplication = async (gigId: string, input: ApplicationInput) => {
       const student = state.users.find((user) => user.id === state.activeUserId);
       if (!student) return;
+      if (student.verificationStatus !== "verified") {
+        throw new Error("Student verification is required before applying.");
+      }
       const application: Application = {
         id: makeId("application"),
         gigId,

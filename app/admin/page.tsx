@@ -78,7 +78,7 @@ export default function AdminPage() {
 
             <div className="mt-8 grid gap-4 sm:grid-cols-4">
               <div className="metric-card"><p className="text-sm font-semibold text-muted">Pending</p><p className="mt-2 font-mono text-2xl font-bold text-warning">{verifications.filter((item) => item.status === "pending").length}</p></div>
-              <div className="metric-card"><p className="text-sm font-semibold text-muted">Verified students</p><p className="mt-2 font-mono text-2xl font-bold text-primary">{users.filter((item) => item.role === "student" && item.verificationStatus === "verified").length}</p></div>
+              <div className="metric-card"><p className="text-sm font-semibold text-muted">Verified students</p><p className="mt-2 font-mono text-2xl font-bold text-primary">{users.filter((item) => item.verificationStatus === "verified").length}</p></div>
               <div className="metric-card"><p className="text-sm font-semibold text-muted">Open gigs</p><p className="mt-2 font-mono text-2xl font-bold">{gigs.filter((item) => item.status === "open").length}</p></div>
               <div className="metric-card"><p className="text-sm font-semibold text-muted">Applications</p><p className="mt-2 font-mono text-2xl font-bold">{applications.length}</p></div>
             </div>
