@@ -340,6 +340,20 @@ export function DemoStoreProvider({ children }: { children: ReactNode }) {
   const [authReady, setAuthReady] = useState(!firebaseEnabled);
 
   useEffect(() => {
+    if (firebaseEnabled) {
+      // Firebase is the source of truth in the deployed build. Never hydrate
+      // stale local demo accounts after they have been removed from Firebase.
+      window.localStorage.removeItem(STORAGE_KEY);
+      queueMicrotask(() => setState((current) => ({
+        ...current,
+        users: [],
+        verifications: [],
+        activeUserId: "",
+      })));
+      queueMicrotask(() => setHydrated(true));
+      return;
+    }
+
     try {
       const saved = window.localStorage.getItem(STORAGE_KEY);
       if (saved) queueMicrotask(() => setState(JSON.parse(saved) as DemoState));
