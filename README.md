@@ -13,7 +13,7 @@ The primary StacStart track is **Future of Work**, with **Access & Inclusion** a
 ## Judge walkthrough
 
 1. Create one account and open the student workspace.
-2. Update Profile with skills, a work link, university details, and an ID-card upload; confirm the inline preview, then submit it for verification.
+2. Update Profile with skills, a work link, university details, and an ID-card upload; confirm the inline preview. **Save profile** only updates the profile; **Request student verification** creates the admin queue request.
 3. Once verified, browse the seeded opportunity and open its Proof Task.
 4. Submit the proof, then open My gigs in the same account.
 5. Open the submission, leave a team recommendation, and shortlist the strongest proof.
