@@ -38,8 +38,8 @@ export default function ProfilePage() {
       if (!values.matricNumber) nextErrors.matricNumber = "Add your matric number before requesting verification.";
       if (!values.idCardUrl && !values.idCardFile) nextErrors.idCardUrl = "Upload your student ID card before requesting verification.";
     }
-    if (values.idCardFile && values.idCardFile.size > 5 * 1024 * 1024) nextErrors.idCardUrl = "Keep the ID card file under 5 MB.";
-    if (values.idCardFile && !["image/jpeg", "image/png", "application/pdf"].includes(values.idCardFile.type)) nextErrors.idCardUrl = "Upload a JPG, PNG, or PDF ID card.";
+    if (values.idCardFile && values.idCardFile.size > 10 * 1024 * 1024) nextErrors.idCardUrl = "Keep the ID card file under 10 MB.";
+    if (values.idCardFile && !["image/jpeg", "image/png", "image/webp"].includes(values.idCardFile.type)) nextErrors.idCardUrl = "Upload a JPG, PNG, or WebP image of your ID card.";
     setErrors(nextErrors);
     if (Object.keys(nextErrors).length) return;
 
@@ -122,7 +122,7 @@ export default function ProfilePage() {
                 </div>
                 <div className="field">
                   <label htmlFor="idCard">Student ID card upload</label>
-                  <input id="idCard" name="idCard" type="file" accept="image/jpeg,image/png,application/pdf" className="input" aria-invalid={errors.idCardUrl ? "true" : undefined} />
+                  <input id="idCard" name="idCard" type="file" accept="image/jpeg,image/png,image/webp" className="input" aria-invalid={errors.idCardUrl ? "true" : undefined} />
                   <p className="field-hint">JPG, PNG, or PDF up to 5 MB. Admins will review it with your student details.</p>
                   {currentUser?.idCardUrl ? <a className="mt-2 inline-flex items-center gap-1 text-sm font-semibold text-primary hover:underline" href={currentUser.idCardUrl} target="_blank" rel="noreferrer">Open uploaded ID card <ExternalLink size={14} aria-hidden="true" /></a> : null}
                   {errors.idCardUrl ? <p className="field-error">{errors.idCardUrl}</p> : null}

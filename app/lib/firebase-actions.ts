@@ -9,8 +9,7 @@ import {
   type UserCredential,
 } from "firebase/auth";
 import { collection, doc, getDocs, setDoc } from "firebase/firestore";
-import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
-import { firebaseAuth, firebaseStorage, firestore, firebaseEnabled } from "./firebase";
+import { firebaseAuth, firestore, firebaseEnabled } from "./firebase";
 import type { User } from "./demo-store";
 
 export async function registerFirebaseAccount(input: {
@@ -58,10 +57,42 @@ export async function persistFirestoreRecord(collectionName: string, id: string,
   await setDoc(doc(firestore, collectionName, id), value);
 }
 
-export async function uploadStudentId(file: File, userId: string) {
-  if (!firebaseEnabled || !firebaseStorage || !firebaseAuth?.currentUser) return null;
-  const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "-");
-  const storageRef = ref(firebaseStorage, `student-ids/${userId}/${Date.now()}-${safeName}`);
-  const snapshot = await uploadBytes(storageRef, file, { contentType: file.type || "application/octet-stream" });
-  return getDownloadURL(snapshot.ref);
+export function prepareStudentIdImage(file: File) {
+  return new Promise<string>((resolve, reject) => {
+    if (!/^image\/(jpeg|png|webp)$/.test(file.type)) {
+      reject(new Error("Choose a JPG, PNG, or WebP image of your student ID."));
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      reject(new Error("Choose an ID image smaller than 10 MB."));
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error("That ID image could not be read. Choose another file."));
+    reader.onload = () => {
+      const image = new window.Image();
+      image.onerror = () => reject(new Error("That ID image could not be opened. Choose another file."));
+      image.onload = () => {
+        const scale = Math.min(1, 1200 / Math.max(image.width, image.height));
+        const canvas = document.createElement("canvas");
+        canvas.width = Math.max(1, Math.round(image.width * scale));
+        canvas.height = Math.max(1, Math.round(image.height * scale));
+        const context = canvas.getContext("2d");
+        if (!context) {
+          reject(new Error("Your browser could not prepare that ID image."));
+          return;
+        }
+        context.drawImage(image, 0, 0, canvas.width, canvas.height);
+        const dataUrl = canvas.toDataURL("image/jpeg", 0.74);
+        if (dataUrl.length > 760_000) {
+          reject(new Error("That image is too detailed after compression. Choose a smaller image."));
+          return;
+        }
+        resolve(dataUrl);
+      };
+      image.src = String(reader.result);
+    };
+    reader.readAsDataURL(file);
+  });
 }

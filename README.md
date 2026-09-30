@@ -32,7 +32,7 @@ The primary StacStart track is **Future of Work**, with **Access & Inclusion** a
 
 - **Firebase Authentication:** email/password accounts with persistent Firebase sessions.
 - **Cloud Firestore:** profiles, gigs, applications, verification requests, and team reviews.
-- **Cloud Storage:** student ID-card uploads are stored under each authenticated profile and linked into the admin verification queue.
+- **Firestore-backed ID evidence:** student ID images are compressed in the browser and saved with the authenticated verification request, so the demo works without a paid Storage bucket.
 - **Security rules:** authenticated reads; user-scoped profile/application creation; protected writes for review records.
 - **Frontend:** Next.js App Router, React, TypeScript, Tailwind CSS, and Lucide icons.
 - **Project:** `campusgig-stacstart` (linked in `.firebaserc`).

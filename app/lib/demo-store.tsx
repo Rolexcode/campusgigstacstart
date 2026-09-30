@@ -15,7 +15,7 @@ import {
   persistFirestoreRecord,
   registerFirebaseAccount,
   subscribeToFirebaseAuth,
-  uploadStudentId,
+  prepareStudentIdImage,
 } from "./firebase-actions";
 import { firebaseEnabled } from "./firebase";
 
@@ -454,9 +454,7 @@ export function DemoStoreProvider({ children }: { children: ReactNode }) {
       const skills = input.skills.map((skill) => skill.trim()).filter(Boolean).slice(0, 12);
       let idCardUrl = user.idCardUrl || input.idCardUrl.trim();
       if (input.idCardFile) {
-        const uploadedIdUrl = await uploadStudentId(input.idCardFile, user.id);
-        if (!uploadedIdUrl) throw new Error("Student ID upload is unavailable.");
-        idCardUrl = uploadedIdUrl;
+        idCardUrl = await prepareStudentIdImage(input.idCardFile);
       }
       const verificationStatus = input.requestVerification ? "pending" : user.verificationStatus;
       const updatedUser: User = {
