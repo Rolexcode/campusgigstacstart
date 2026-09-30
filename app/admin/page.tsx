@@ -30,7 +30,20 @@ export default function AdminPage() {
   const [refreshing, setRefreshing] = useState(false);
 
   const selectedRequest = selectedUser
-    ? verifications.find((request) => request.userId === selectedUser.id)
+    ? verifications.find((request) => request.userId === selectedUser.id) ?? (selectedUser.verificationStatus === "pending" ? {
+      id: selectedUser.id,
+      userId: selectedUser.id,
+      studentName: selectedUser.name,
+      university: selectedUser.university || "",
+      schoolEmail: selectedUser.schoolEmail || selectedUser.email,
+      matricNumber: selectedUser.matricNumber || "",
+      idCardUrl: selectedUser.idCardUrl || "",
+      portfolioUrl: selectedUser.portfolioUrl || "",
+      skills: selectedUser.skills,
+      note: `${selectedUser.course || "Student"} profile submitted for verification.`,
+      status: "pending" as const,
+      submittedAt: new Date().toISOString(),
+    } : undefined)
     : undefined;
 
   useEffect(() => {
@@ -76,6 +89,7 @@ export default function AdminPage() {
       if (pin === "2026") {
         setAuthenticated(true);
         setError("");
+        void refreshData();
       } else {
         setError("That PIN is not correct. Check your admin credentials and try again.");
       }

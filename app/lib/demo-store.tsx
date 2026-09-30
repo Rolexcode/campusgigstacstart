@@ -544,7 +544,24 @@ export function DemoStoreProvider({ children }: { children: ReactNode }) {
       requestId: string,
       decision: "approved" | "rejected",
     ) => {
-      const request = state.verifications.find((item) => item.id === requestId);
+      const request = state.verifications.find((item) => item.id === requestId) ?? (() => {
+        const pendingUser = state.users.find((item) => item.id === requestId && item.verificationStatus === "pending");
+        if (!pendingUser) return undefined;
+        return {
+          id: pendingUser.id,
+          userId: pendingUser.id,
+          studentName: pendingUser.name,
+          university: pendingUser.university || "",
+          schoolEmail: pendingUser.schoolEmail || pendingUser.email,
+          matricNumber: pendingUser.matricNumber || "",
+          idCardUrl: pendingUser.idCardUrl || "",
+          portfolioUrl: pendingUser.portfolioUrl || "",
+          skills: pendingUser.skills,
+          note: `${pendingUser.course || "Student"} profile submitted for verification.`,
+          status: "pending" as const,
+          submittedAt: new Date().toISOString(),
+        };
+      })();
       if (!request) return;
       const updatedRequest = { ...request, status: decision };
       const updatedUser = state.users.find((item) => item.id === request.userId);
@@ -558,9 +575,9 @@ export function DemoStoreProvider({ children }: { children: ReactNode }) {
       setState((current) => {
         return {
           ...current,
-          verifications: current.verifications.map((item) =>
-            item.id === requestId ? { ...item, status: decision } : item,
-          ),
+          verifications: current.verifications.some((item) => item.id === requestId)
+            ? current.verifications.map((item) => item.id === requestId ? { ...item, status: decision } : item)
+            : [updatedRequest, ...current.verifications],
           users: current.users.map((item) =>
             item.id === request.userId
               ? {

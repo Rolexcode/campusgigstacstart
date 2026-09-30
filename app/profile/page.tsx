@@ -158,6 +158,7 @@ export default function ProfilePage() {
                     <ShieldCheck size={17} aria-hidden="true" />Request student verification
                   </button>
                 ) : null}
+                {currentUser?.verificationStatus !== "verified" ? <p className="mt-3 text-center text-xs leading-5 text-muted">Saving your profile only updates your details. Use the verification button when your school information and ID card are ready to send to admins.</p> : null}
                 {savedMessage ? <p role="status" className="mt-3 text-center text-sm font-semibold text-primary">{savedMessage}</p> : null}
                 {errors.form ? <p role="alert" className="field-error mt-3 text-center">{errors.form}</p> : null}
               </div>
